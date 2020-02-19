@@ -1,28 +1,20 @@
 require 'redmine'
 
 ActiveSupport::Reloader.to_prepare do
-  require_dependency 'redmine_better_crossprojects/projects_controller_patch' unless Rails.env.test?
-  # require_dependency 'redmine_better_crossprojects/custom_field_patch' # TODO Remove this file if everything works
-  require_dependency 'redmine_better_crossprojects/queries_helper_patch'
-  require_dependency 'redmine_better_crossprojects/queries_controller_patch'
-  require_dependency 'redmine_better_crossprojects/issues_pdf_helper_patch'
+  require_dependency 'redmine_projects_queries_extension/application_controller_patch'
+  require_dependency 'redmine_projects_queries_extension/projects_controller_patch'
+  require_dependency 'redmine_projects_queries_extension/queries_helper_patch'
+  require_dependency 'redmine_projects_queries_extension/project_query_patch'
 end
 
-Redmine::Plugin.register :redmine_better_crossprojects do
-  name 'Redmine Better Crossprojects plugin'
-  description 'This plugin will just provide better cross project views (based on 1.0.0(RC) ones)'
-  url 'https://github.com/jbbarth/redmine_better_crossprojects'
-  author 'Jean-Baptiste BARTH'
-  author_url 'mailto:jeanbaptiste.barth@gmail.com'
-  requires_redmine :version_or_higher => '2.6.0'
-  requires_redmine_plugin :redmine_base_select2, :version_or_higher => '4.0.0'
+Redmine::Plugin.register :redmine_projects_queries_extension do
+  name 'Redmine Projects Queries Extension plugin'
+  description 'This plugin provides additional filters and columns to projects queries'
+  url 'https://github.com/nanego/redmine_projects_queries_extension'
+  author 'Vincent ROBERT'
+  author_url 'https://github.com/nanego'
+  requires_redmine :version_or_higher => '4.1.0'
   requires_redmine_plugin :redmine_base_deface, :version_or_higher => '0.0.1'
   requires_redmine_plugin :redmine_base_rspec, :version_or_higher => '0.0.4' if Rails.env.test?
-  version '3.4.2'
-  settings :default => {'default_columns' => "name,role,users,issues,activity", 'show_description_as_a_column' => true},
-           :partial => 'settings/redmine_plugin_better_crossprojects_settings'
-end
-
-Redmine::MenuManager.map :project_menu do |menu|
-  #menu.delete :new_issue
+  version '4.1.0'
 end

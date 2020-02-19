@@ -1,10 +1,11 @@
-# Redmine plugin for better cross-projects views
+# Redmine Projects-Queries Extension plugin which adds new filters and columns to projects queries
 
-Everything is explained here: http://www.redmine.org/issues/5920
+This plugin adds new filters and columns to projects queries.
 
-## Screenshot
+It is only compatible with Redmine 4.1.0 and above.
 
-![redmine_better_crossprojects screenshot](http://jbbarth.com/screenshots/redmine_better_crossprojects.png)
+This plugin is a fork from the [Better CrossProjects](https://github.com/jbbarth/redmine_better_crossprojects) plugin and you should continue to use this one if you are running Redmine 4.0.x or Redmine 3.
+
 
 ## Installation
 
@@ -12,13 +13,12 @@ Please apply general instructions for plugins [here](http://www.redmine.org/wiki
 
 Requirements:
 
-    ruby >= 2.1.0
+    ruby >= 2.3.0
     
 Note that this plugin now depends on:
-* **redmine_base_select2** which can be found [here](https://github.com/jbbarth/redmine_base_select2)
 * **redmine_base_deface** which can be found [here](https://github.com/jbbarth/redmine_base_deface)
 
-First download the source or clone the plugin and put it in the "plugins/" directory of your redmine instance. Note that this is crucial that the directory is named 'redmine_better_crossprojects' !
+First download the source or clone the plugin and put it in the "plugins/" directory of your redmine instance. Note that this is crucial that the directory is named 'redmine_projects_queries_extension' !
 
 Then execute:
 
@@ -27,7 +27,8 @@ Then execute:
 
 And finally restart your Redmine instance.
 
-This plugin is fully compatible with Redmine 2.x and 3.x. Please feel free to report any bug you encounter.
+This plugin is only compatible with Redmine 4.1.0 and above.
+Please feel free to report any bug you encounter.
 
 ## Contributing
 

@@ -1,11 +1,12 @@
 require 'spec_helper'
-require 'redmine_better_crossprojects/queries_helper_patch'
+require 'projects_queries_helper'
+require 'redmine_projects_queries_extension/queries_helper_patch'
 
-describe QueriesHelper, type: :helper do
+describe ProjectsQueriesHelper, type: :helper do
 
   it "should display parent column as a link to a project" do
-    query = ProjectQuery.new(:name => '_', :column_names => ["name", "parent"])
-    content = column_content(QueryColumn.new(:parent), query.projects.select{|e| e.parent_id == 1}.first)
+    query = ProjectQuery.new(:name => '_', :column_names => ["name", "parent_id"])
+    content = column_value(QueryColumn.new(:parent_id), query.results_scope.select{|e| e.parent_id == 1}.first, Project.find(1))
     expect(content).to have_link("eCookbook")
   end
 

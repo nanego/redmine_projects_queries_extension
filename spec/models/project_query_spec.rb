@@ -9,7 +9,8 @@ describe "ProjectQuery" do
 
   it "should available filters should be ordered" do
     query = ProjectQuery.new
-    expect(query.available_filters.keys.index('id')).to eq 0
+    expect(query.available_filters.keys.index('status')).to eq 0
+    expect(query.available_filters.keys.index('id')).to eq 1
   end
 
   it "should project name filter in queries" do
