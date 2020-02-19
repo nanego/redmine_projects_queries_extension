@@ -1,4 +1,4 @@
-# Redmine Projects-Queries Extension plugin which adds new filters and columns to projects queries
+# Redmine Projects-Queries Extension plugin
 
 This plugin adds new filters and columns to projects queries.
 
@@ -29,6 +29,17 @@ And finally restart your Redmine instance.
 
 This plugin is only compatible with Redmine 4.1.0 and above.
 Please feel free to report any bug you encounter.
+
+## Test status
+
+|Plugin branch| Redmine Version   | Test Status       |
+|-------------|-------------------|-------------------|
+|master       | master            | [![Build1][1]][5] |
+|master       | 4.1.0             | [![Build1][2]][5] |
+
+[1]: https://travis-matrix-badges.herokuapp.com/repos/nanego/redmine_projects_queries_extension/branches/master/1?use_travis_com=true
+[2]: https://travis-matrix-badges.herokuapp.com/repos/nanego/redmine_projects_queries_extension/branches/master/2?use_travis_com=true
+[5]: https://travis-ci.com/nanego/redmine_projects_queries_extension
 
 ## Contributing
 
