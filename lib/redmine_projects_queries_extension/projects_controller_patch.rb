@@ -5,6 +5,9 @@ class ProjectsController
 
   before_action :preload_memberships, only: [:index]
 
+  skip_before_action :find_project, :only => [:get_mail_addresses]
+  skip_before_action :authorize, :only => [:get_mail_addresses]
+
   def preload_memberships
     #pre-load current user's memberships
     @memberships = User.current.memberships.inject({}) do |memo, membership|
@@ -91,6 +94,51 @@ class ProjectsController
   end
 
   helper_method :directions_map
+
+  def get_mail_addresses
+    retrieve_project_query
+    @projects = project_scope
+    # remove_hidden_projects
+    if params['role'].present?
+      filename = "emails-#{Role.find(params['role']).join("-")}.csv"
+    else
+      filename = "emails.csv"
+    end
+    send_data query_to_mail_addresses(@projects, params), :type => 'text/csv', :filename => filename
+  end
+
+  def query_to_mail_addresses(projects, options = {})
+    encoding = l(:general_csv_encoding)
+
+    all_users = []
+    # TODO This code seems very slow, we should refactor it
+    projects.each do |project|
+      if options['role'].blank? && options['function'].blank?
+        all_users = all_users | project.users
+      end
+      if options['role'].present?
+        roles = Role.find(options['role'].split(','))
+        roles.each do |role|
+          all_users = all_users | project.users_by_role[role] if project.users_by_role[role]
+        end
+      end
+      if options['function'].present?
+        functions = Function.find(options['function'].split(','))
+        functions.each do |function|
+          all_users = all_users | project.users_by_function[function] if project.users_by_function[function]
+        end
+      end
+    end
+    all_users.sort! {|a, b| a.lastname.downcase <=> b.lastname.downcase}
+
+    Redmine::Export::CSV.generate do |csv|
+      # csv lines
+      all_users.in_groups_of(50, false).each do |group| # TODO make it customizable in plugin settings
+        # csv line
+        csv << group.collect {|u| Redmine::CodesetUtil.from_utf8(u.mail, encoding)}
+      end
+    end
+  end
 
 end
 

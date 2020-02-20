@@ -11,3 +11,9 @@ Deface::Override.new :virtual_path  => 'projects/index',
 <% end %>
 
 SCRIPT
+
+Deface::Override.new :virtual_path  => 'projects/index',
+                     :original      => 'd3fb826a2bd63adc1df8f1fd9d6bd3706a548bab',
+                     :name          => 'add-email-export-link-on-the-projects-page',
+                     :insert_before => 'erb[silent]:contains("html_title(l(:label_project_plural))")',
+                     :partial       => 'projects/link_to_export'

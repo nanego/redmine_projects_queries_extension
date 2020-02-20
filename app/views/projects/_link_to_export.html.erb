@@ -1,0 +1,26 @@
+<% if User.current.admin? %>
+  <p class="other-formats">
+    <%= link_to l('link_get_mail_addresses'), '#', :onclick => "showModal('mailing-list-options', '400px'); return false;", :class => "export_links" %>
+  </p>
+  <div id="mailing-list-options" style="display:none;">
+    <h3 class="title"><%= l('link_get_mail_addresses') %></h3>
+    <% @roles = Role.sorted %>
+    <%= form_tag(plugin_projects_queries_extension_get_mail_addresses_path, :method => :post, :id => 'mailing-export-form', params: params.merge({:format => 'csv', :page => nil})) do %>
+      <p>
+        <label> <%= l(:label_technical_role_plural) %>
+          : <%= select_tag "role", options_from_collection_for_select(@roles, "id", "name"), multiple: true, id: "mailing_list_export_roles" %></label>
+      </p>
+      <% if Redmine::Plugin.installed?(:redmine_limited_visibility) %>
+        <p>
+          <label> <%= l(:label_functional_roles) %>
+            : <%= select_tag "function", options_from_collection_for_select(Function.sorted, "id", "name"), multiple: true, id: "mailing_list_export_functions" %></label>
+        </p>
+      <% end %>
+      <%= hidden_field_tag :visible_projects %>
+      <p class="buttons">
+        <%= submit_tag l(:button_create), :name => nil, :onclick => "hideModal(this);" %>
+        <%= submit_tag l(:button_cancel), :name => nil, :onclick => "hideModal(this);", :type => 'button' %>
+      </p>
+    <% end %>
+  </div>
+<% end %>

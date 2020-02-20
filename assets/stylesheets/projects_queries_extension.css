@@ -23,3 +23,9 @@ fieldset#filters table td { padding: 2px; vertical-align: inherit; }
 .filter:focus {outline:none;}
 .projects_query_form fieldset.collapsible { border-width: 1px;margin-bottom: 10px;}
 .projects_query_form fieldset.collapsible.collapsed { border-width: 1px 0 0 0;margin-bottom: 0;margin-left: 1px;}
+
+/* Emails export */
+form#mailing-export-form .select2-container{
+    min-width: 200px;
+    width: 200px;
+}
