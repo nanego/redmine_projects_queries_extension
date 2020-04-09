@@ -35,7 +35,7 @@ Please feel free to report any bug you encounter.
 |Plugin branch| Redmine Version   | Test Status       |
 |-------------|-------------------|-------------------|
 |master       | master            | [![Build1][1]][5] |
-|master       | 4.1.0             | [![Build1][2]][5] |
+|master       | 4.1.1             | [![Build1][2]][5] |
 
 [1]: https://travis-matrix-badges.herokuapp.com/repos/nanego/redmine_projects_queries_extension/branches/master/1?use_travis_com=true
 [2]: https://travis-matrix-badges.herokuapp.com/repos/nanego/redmine_projects_queries_extension/branches/master/2?use_travis_com=true
