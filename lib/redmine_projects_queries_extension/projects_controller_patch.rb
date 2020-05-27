@@ -41,7 +41,11 @@ class ProjectsController
         orgas_fullnames[o.id] = o.fullname
       end
 
-      sql = Organization.select("organizations.id, project_id, role_id").joins(:users => {:members => :member_roles}).order("project_id, role_id, organizations.id").group("project_id, role_id, organizations.id").to_sql
+      sql = Organization.select("organizations.id, project_id, role_id").
+          joins(:users => {:members => :member_roles}).
+          where("users.status = ?", Principal::STATUS_ACTIVE).
+          order("project_id, role_id, organizations.id").
+          group("project_id, role_id, organizations.id").to_sql
       array = ActiveRecord::Base.connection.execute(sql)
       map = {}
       array.each do |record|
@@ -55,7 +59,11 @@ class ProjectsController
       end
 
       if Redmine::Plugin.installed?(:redmine_limited_visibility)
-        sql = Organization.select("organizations.id, project_id, function_id").joins(:users => {:members => :member_functions}).order("project_id, function_id, organizations.id").group("project_id, function_id, organizations.id").to_sql
+        sql = Organization.select("organizations.id, project_id, function_id").
+            joins(:users => {:members => :member_functions}).
+            where("users.status = ?", Principal::STATUS_ACTIVE).
+            order("project_id, function_id, organizations.id").
+            group("project_id, function_id, organizations.id").to_sql
         array = ActiveRecord::Base.connection.execute(sql)
         array.each do |record|
           unless map[record["project_id"]]
