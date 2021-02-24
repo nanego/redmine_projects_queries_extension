@@ -37,7 +37,7 @@ class ProjectsController
     cache_strategy = ['all-organizations', Member.maximum("created_on").to_i, Organization.maximum("updated_at").to_i, 2].join('/')
     @organizations_map ||= Rails.cache.fetch cache_strategy do
       orgas_fullnames = {}
-      Organization.all.each do |o|
+      Organization.find_each do |o|
         orgas_fullnames[o.id] = o.fullname
       end
 

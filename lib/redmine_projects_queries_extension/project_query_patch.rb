@@ -1,3 +1,4 @@
+require_dependency 'query'
 require_dependency 'project_query'
 
 class ProjectQuery < Query
@@ -22,6 +23,42 @@ end
 
 module PluginProjectsQueriesExtension
   module ProjectQueryPatch
+
+    class QueryRoleColumn < QueryColumn
+      def initialize(role)
+        self.name = "role_#{role.id}".to_sym
+        self.sortable = false
+        self.groupable = false
+        @inline = true
+        @role = role
+      end
+
+      def caption
+        @role.name
+      end
+
+      def role
+        @role
+      end
+    end
+
+    class QueryFunctionColumn < QueryColumn
+      def initialize(function)
+        self.name = "function_#{function.id}".to_sym
+        self.sortable = false
+        self.groupable = false
+        @inline = true
+        @function = function
+      end
+
+      def caption
+        @function.name
+      end
+
+      def role
+        @function
+      end
+    end
 
     def initialize_available_filters
       super
@@ -88,10 +125,7 @@ module PluginProjectsQueriesExtension
     def all_users
       timestamp = Member.maximum(:created_on)
       Rails.cache.fetch ['all-users', timestamp.to_i].join('/') do
-        principals = []
-        principals += Principal.active.joins(:members).where("#{Member.table_name}.project_id IN (SELECT id FROM #{Project.table_name})").uniq
-        principals.sort!
-        principals.select {|p| p.is_a?(User)}
+        User.active.sorted.joins(:members).where("#{Member.table_name}.project_id IN (SELECT id FROM #{Project.table_name})").uniq
       end
     end
 
@@ -142,39 +176,3 @@ module PluginProjectsQueriesExtension
 end
 
 ProjectQuery.prepend PluginProjectsQueriesExtension::ProjectQueryPatch
-
-class QueryRoleColumn < QueryColumn
-  def initialize(role)
-    self.name = "role_#{role.id}".to_sym
-    self.sortable = false
-    self.groupable = false
-    @inline = true
-    @role = role
-  end
-
-  def caption
-    @role.name
-  end
-
-  def role
-    @role
-  end
-end
-
-class QueryFunctionColumn < QueryColumn
-  def initialize(function)
-    self.name = "function_#{function.id}".to_sym
-    self.sortable = false
-    self.groupable = false
-    @inline = true
-    @function = function
-  end
-
-  def caption
-    @function.name
-  end
-
-  def role
-    @function
-  end
-end
