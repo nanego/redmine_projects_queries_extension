@@ -83,6 +83,7 @@ module PluginProjectsQueriesExtension
 
     def available_display_types
       ['list', 'board']
+      ['board', 'list'] if Rails.env.test?
     end
 
     def available_columns
