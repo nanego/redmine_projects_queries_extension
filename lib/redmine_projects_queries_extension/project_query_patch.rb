@@ -81,10 +81,6 @@ module PluginProjectsQueriesExtension
 
     end
 
-    def available_display_types
-      Rails.env.test? ? ['board', 'list'] : ['list', 'board']
-    end
-
     def available_columns
       return @available_columns if @available_columns
       @available_columns = super

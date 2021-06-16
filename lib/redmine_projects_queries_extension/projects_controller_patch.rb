@@ -127,7 +127,7 @@ class ProjectsController
       if options['role'].present?
         roles = Role.find(options['role'].split(','))
         roles.each do |role|
-          all_users = all_users | project.users_by_role[role] if project.users_by_role[role]
+          all_users = all_users | project.principals_by_role[role] if project.principals_by_role[role]
         end
       end
       if options['function'].present?
