@@ -55,6 +55,8 @@ module PluginProjectsQueriesExtension
         end
       when :members
         value = members_map[project.id]
+      when :users
+        ""
       when /role_(\d+)$/
         if organizations_map[project.id] && organizations_map[project.id][$1.to_i]
           value = organizations_map[project.id][$1.to_i].join(', ')
