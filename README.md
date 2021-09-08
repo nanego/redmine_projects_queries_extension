@@ -34,12 +34,12 @@ Please feel free to report any bug you encounter.
 
 |Plugin branch| Redmine Version   | Test Status      |
 |-------------|-------------------|------------------|
-|master       | 4.2.1             | [![4.2.1][1]][5] |  
-|master       | 4.1.3             | [![4.1.3][2]][5] |  
+|master       | 4.2.2             | [![4.2.2][1]][5] |  
+|master       | 4.1.4             | [![4.1.4][2]][5] |  
 |master       | master            | [![master][3]][5]|
 
-[1]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/4_2_1.yml/badge.svg
-[2]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/4_1_3.yml/badge.svg
+[1]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/4_2_2.yml/badge.svg
+[2]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/4_1_4.yml/badge.svg
 [3]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/master.yml/badge.svg
 [5]: https://github.com/nanego/redmine_projects_queries_extension/actions
 
