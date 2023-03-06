@@ -1,4 +1,3 @@
-tr.project.idnt td.name span { background:none; }
 .list.projects { width:100%; margin:10px 0; border-collapse:collapse; cursor:default; }
 .list.projects td { padding:5px 6px; }
 .list.projects th { vertical-align:top; }
