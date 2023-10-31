@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'projects_queries_helper'
-require 'redmine_projects_queries_extension/queries_helper_patch'
 
 describe ProjectsQueriesHelper, type: :helper do
 

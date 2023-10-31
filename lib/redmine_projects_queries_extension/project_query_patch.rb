@@ -17,11 +17,11 @@ class ProjectQuery < Query
   self.available_columns << QueryColumn.new(:role, :sortable => false) unless self.available_columns.select {|c| c.name == :role}.present?
   self.available_columns << QueryColumn.new(:members, :sortable => false) unless self.available_columns.select {|c| c.name == :members}.present?
   self.available_columns << QueryColumn.new(:users, :sortable => false) unless self.available_columns.select {|c| c.name == :users}.present?
-  self.available_columns << QueryColumn.new(:description)
+  self.available_columns << QueryColumn.new(:description) unless self.available_columns.select {|c| c.name == :description}.present?
   self.available_columns << QueryColumn.new(:organizations, :sortable => false, :default_order => 'asc') if self.has_organizations_plugin?
 end
 
-module PluginProjectsQueriesExtension
+module RedmineProjectsQueriesExtension
   module ProjectQueryPatch
 
     class QueryRoleColumn < QueryColumn
@@ -171,4 +171,4 @@ module PluginProjectsQueriesExtension
   end
 end
 
-ProjectQuery.prepend PluginProjectsQueriesExtension::ProjectQueryPatch
+ProjectQuery.prepend RedmineProjectsQueriesExtension::ProjectQueryPatch

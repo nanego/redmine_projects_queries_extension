@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'redmine_projects_queries_extension/projects_controller_patch'
 
 describe ProjectsController, type: :controller do
   render_views

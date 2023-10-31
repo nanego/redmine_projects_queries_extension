@@ -1,11 +1,5 @@
 require 'redmine'
-
-ActiveSupport::Reloader.to_prepare do
-  require_dependency 'redmine_projects_queries_extension/application_controller_patch'
-  require_dependency 'redmine_projects_queries_extension/projects_controller_patch'
-  require_dependency 'redmine_projects_queries_extension/queries_helper_patch'
-  require_dependency 'redmine_projects_queries_extension/project_query_patch'
-end
+require_relative 'lib/redmine_projects_queries_extension/hooks'
 
 Redmine::Plugin.register :redmine_projects_queries_extension do
   name 'Redmine Projects Queries Extension plugin'
