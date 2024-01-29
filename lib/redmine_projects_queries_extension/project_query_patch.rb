@@ -72,6 +72,11 @@ module RedmineProjectsQueriesExtension
 
       add_available_filter "updated_on", :type => :date_past
 
+      # add a filter for each tracker
+      Tracker.all.each do |tracker|
+        add_available_filter "last_issue_date_#{tracker.id}", :type => :last_issue_date, :name => l(:field_last_issue_date, :value => tracker.name)
+      end
+
       if self.class.has_organizations_plugin?
         directions_values = Organization.select("name, id").where('direction = ?', true).order("name")
         add_available_filter("organizations", :type => :list, :values => directions_values.collect {|s| [s.name, s.id.to_s]})
@@ -138,6 +143,31 @@ module RedmineProjectsQueriesExtension
           "GROUP BY #{member_table}.project_id HAVING count(#{member_table}.project_id) = #{value.size}" + ') '
     end
 
+    def sql_for_field(field, operator, value, db_table, db_field, is_custom_filter=false)
+      if field.start_with?("last_issue_date_")
+        parts = field.split("_")
+        if parts.last.match?(/\d+/)
+          tracker_id = parts.last.to_i
+          sql = get_issues_by_tracker_sql(tracker_id, operator, value)
+        else
+          super
+        end
+      else
+        super
+      end
+    end
+
+    def get_issues_by_tracker_sql(tracker_id, operator, value)
+      issue_table = Issue.table_name
+      sql_date = sql_for_field("created_on", operator, value, issue_table, "created_on")
+
+      sql_project = "SELECT project_id, MAX(id) AS id, MAX(created_on) AS created_on  from #{issue_table} WHERE tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
+      project_ids = "SELECT project_id FROM (#{sql_project}) AS latest_issues"
+
+      sql = "#{Project.table_name}.id  IN (#{project_ids})"
+      sql
+    end
+
     def sql_for_organizations_field(field, operator, value)
 
       organization_table = Organization.table_name
@@ -172,3 +202,7 @@ module RedmineProjectsQueriesExtension
 end
 
 ProjectQuery.prepend RedmineProjectsQueriesExtension::ProjectQueryPatch
+
+class ProjectQuery < Query
+  self.operators_by_filter_type.merge!({ :last_issue_date => self.operators_by_filter_type[:date] })
+end
