@@ -31,6 +31,10 @@ module RedmineProjectsQueriesExtension
           if organizations_map[item.id] && organizations_map[item.id][column.name.to_s]
             organizations_map[item.id][column.name.to_s].uniq.join(', ').html_safe
           end
+        when /last_issue_date_(\d+)$/
+          if trackers_issues_map[item.id] && trackers_issues_map[item.id][column.name.to_s]
+            trackers_issues_map[item.id][column.name.to_s].html_safe
+          end
         when :organizations
           directions_map[item.id]
         else
@@ -66,6 +70,10 @@ module RedmineProjectsQueriesExtension
       when /function_(\d+)$/
         if organizations_map[project.id] && organizations_map[project.id][column.name.to_s]
           value = organizations_map[project.id][column.name.to_s].uniq.join(', ').html_safe
+        end
+      when /last_issue_date_(\d+)$/
+        if trackers_issues_map[project.id] && trackers_issues_map[project.id][column.name.to_s]
+          value = trackers_issues_map[project.id][column.name.to_s].html_safe
         end
       else
         return super

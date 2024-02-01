@@ -74,6 +74,28 @@ module RedmineProjectsQueriesExtension
       end
     end
 
+    def trackers_issues_map
+      cache_strategy = ['all-projects', Project.maximum("created_on").to_i, Tracker.maximum("id").to_i, Issue.maximum("updated_on").to_i].join('/')
+      @trackers_issues_map ||= Rails.cache.fetch cache_strategy do
+        sql = Issue.select("project_id, tracker_id, Max(created_on)").
+          group("project_id, tracker_id").to_sql
+        array = ActiveRecord::Base.connection.execute(sql)
+        map = {}
+        array.each do |record|
+          unless map[record["project_id"]]
+            map[record["project_id"]] = {}
+          end
+          unless map[record["project_id"]]["last_issue_date_#{record["tracker_id"]}"]
+            map[record["project_id"]]["last_issue_date_#{record["tracker_id"]}"] = []
+          end
+          datetime = DateTime.parse(record["max"])
+          formatted_date = datetime.strftime("%Y-%m-%d")
+          map[record["project_id"]]["last_issue_date_#{record["tracker_id"]}"] = formatted_date
+        end
+        map
+      end
+    end
+
     def directions_map
       @directions_map ||= Rails.cache.fetch ['all-directions', Member.maximum("created_on").to_i, Organization.maximum("updated_at").to_i].join('/') do
         map = {}
@@ -153,7 +175,7 @@ class ProjectsController
   helper_method :members_map
   helper_method :organizations_map
   helper_method :directions_map
-
+  helper_method :trackers_issues_map
 end
 
 class Project
