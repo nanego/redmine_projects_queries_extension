@@ -4,8 +4,10 @@ describe ProjectsController, type: :controller do
   fixtures :projects, :users, :roles, :members, :member_roles, :issue_statuses,
            :trackers, :projects_trackers, :enumerations, :queries
 
+  include ActiveSupport::Testing::Assertions         
   render_views
-
+  include Redmine::I18n
+  
   before do
     # reset current user
     User.current = nil
