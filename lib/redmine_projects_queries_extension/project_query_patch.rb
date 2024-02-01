@@ -60,6 +60,24 @@ module RedmineProjectsQueriesExtension
       end
     end
 
+    class QueryTrackerColumn < QueryColumn
+      def initialize(tracker)
+        self.name = "last_issue_date_#{tracker.id}".to_sym
+        self.sortable = true
+        self.groupable = false
+        @inline = true
+        @tracker = tracker
+      end
+
+      def caption
+        l(:field_last_issue_date, :value => @tracker.name)
+      end
+
+      def tracker
+        @tracker
+      end
+    end
+
     def initialize_available_filters
       super
 
@@ -97,6 +115,9 @@ module RedmineProjectsQueriesExtension
         if self.class.has_limited_visibility_plugin?
           @available_columns += Function.order("position asc").all.collect {|function| QueryFunctionColumn.new(function)}
         end
+
+        # add a available_columns for each tracker
+        @available_columns += Tracker.all.collect {|tracker| QueryTrackerColumn.new(tracker)}
       end
       @available_columns
     end
@@ -161,7 +182,8 @@ module RedmineProjectsQueriesExtension
       issue_table = Issue.table_name
       sql_date = sql_for_field("created_on", operator, value, issue_table, "created_on")
 
-      sql_project = "SELECT project_id, MAX(id) AS id, MAX(created_on) AS created_on  from #{issue_table} WHERE tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
+      sql_project = "SELECT project_id, MAX(id) AS id, MAX(created_on) AS created_on  from #{issue_table} WHERE " +
+                     "tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
       project_ids = "SELECT project_id FROM (#{sql_project}) AS latest_issues"
 
       sql = "#{Project.table_name}.id  IN (#{project_ids})"

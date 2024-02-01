@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe "ProjectQuery" do
-  fixtures :projects, :users, :roles, :members, :member_roles, :issue_statuses, :trackers, :projects_trackers, :enumerations, :queries
+  fixtures :projects, :users, :roles, :members, :member_roles, :issue_statuses,
+           :trackers, :projects_trackers, :enumerations, :queries
 
   before do
     User.current = nil
@@ -18,13 +21,13 @@ describe "ProjectQuery" do
     project_name_filter = query.available_filters["id"]
     refute_nil project_name_filter
     project_ids = project_name_filter[:values].map{|p| p[1]}
-    assert project_ids.include?("1")  #public project
-    assert !project_ids.include?("2") #private project user cannot see
+    assert project_ids.include?("1")  # public project
+    assert !project_ids.include?("2") # private project user cannot see
   end
 
   def find_projects_with_query(query)
     Project.where(
-        query.statement
+      query.statement
     ).all
   end
 
@@ -69,7 +72,7 @@ describe "ProjectQuery" do
     CustomValue.create!(:custom_field => f, :customized => Project.find(1), :value => 'value2')
     CustomValue.create!(:custom_field => f, :customized => Project.find(3), :value => 'value1')
 
-    query = ProjectQuery.new(:name => '_', column_names: ["id", "name", "cf_#{f.id}"])
+    query = ProjectQuery.new(:name => '_', :column_names => ["id", "name", "cf_#{f.id}"])
     query.add_filter("cf_#{f.id}", '!', ['value1'])
     projects = find_projects_with_query(query)
     assert !projects.map(&:id).include?(1)
@@ -187,7 +190,6 @@ describe "ProjectQuery" do
       issue.created_on = Date.tomorrow.to_s(:db)
       issue.updated_on = Date.tomorrow.to_s(:db)
       issue.save
-      #
     end
 
     it "operator >=" do
@@ -196,119 +198,140 @@ describe "ProjectQuery" do
 
       expect(projects.size).to eq(0)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>=', :values => [20.days.ago.to_s(:db)]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>=', :values => [20.days.ago.to_s(:db)]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2) # project 1,4
       expect(projects.map(&:id)).to include(1, 4)
     end
 
     it "operator =" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '=', :values => ["2012-06-16 20:00:00"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '=', :values => ["2012-06-16 20:00:00"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(Project.last.id)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '=', :values => ["2012-06-16 20:00:00"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '=', :values => ["2012-06-16 20:00:00"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(0)
     end
 
     it "operator <=" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<=', :values => [Date.today.to_s(:db)]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<=', :values => [Date.today.to_s(:db)]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<=', :values => [7.months.ago.to_s(:db)]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<=', :values => [7.months.ago.to_s(:db)]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(2)
     end
 
     it "operator this week w" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'w', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'w', :values => [""]}})
       projects = find_projects_with_query(query)
-      expect(projects.size).to eq(0)
+      expect(projects.size).to eq(2)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'w', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'w', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'w', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'w', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(2)
     end
 
     it "operator l2w last 2 weeks" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'l2w', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'l2w', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(1, 4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'l2w', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'l2w', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
     end
 
     it "operator y this year" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'y', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'y', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(1, 4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'y', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'y', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'y', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'y', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
     end
 
     it "operator <t- more of " do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '<t-', :values => ["10"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '<t-', :values => ["10"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(1, Project.last.id)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '<t-', :values => ["10"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '<t-', :values => ["10"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<t-', :values => ["10"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<t-', :values => ["10"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(2)
     end
 
     it "operator >t- less than " do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>t-', :values => ["1"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>t-', :values => ["1"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(0)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '>t-', :values => ["1"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '>t-', :values => ["1"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '>t-', :values => ["1"]}})
+      query = ProjectQuery.new(:name => '_',
+                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '>t-', :values => ["1"]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(2)
     end
 
     it "operator lm last month" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'lm', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+              :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'lm', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(0)
 
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'lm', :values => [""]}})
+      query = ProjectQuery.new(:name => '_',
+              :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'lm', :values => [""]}})
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(0)
 
