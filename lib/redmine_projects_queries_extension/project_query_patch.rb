@@ -127,6 +127,8 @@ module RedmineProjectsQueriesExtension
       json = {}
       available_filters.each do |field, filter|
         options = {:type => filter[:type], :name => filter[:name]}
+        # This condition is specifically for JavaScript to prevent the overriding of the buildFilterRow method.
+        options = {:type => "date", :name => filter[:name]} if filter[:type] == :last_issue_date
         options[:name] = l("field_project") if field == "id"
         options[:name] = l("label_member") if field == "member_id"
         options[:remote] = true if filter.remote
