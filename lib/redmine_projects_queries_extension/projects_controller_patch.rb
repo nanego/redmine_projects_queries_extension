@@ -88,8 +88,8 @@ module RedmineProjectsQueriesExtension
           unless map[record["project_id"]]["last_issue_date_#{record["tracker_id"]}"]
             map[record["project_id"]]["last_issue_date_#{record["tracker_id"]}"] = []
           end
-          datetime = DateTime.parse(record["max"].to_s)
-          formatted_date = datetime.strftime("%m/%d/%Y %I:%M %p")
+          parsed_date = Time.parse(record["max"].to_s)
+          formatted_date = format_object(parsed_date)
           map[record["project_id"]]["last_issue_date_#{record["tracker_id"]}"] = formatted_date
         end
         map
