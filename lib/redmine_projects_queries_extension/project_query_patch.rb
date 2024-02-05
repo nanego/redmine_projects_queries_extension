@@ -115,10 +115,9 @@ module RedmineProjectsQueriesExtension
         if self.class.has_limited_visibility_plugin?
           @available_columns += Function.order("position asc").all.collect {|function| QueryFunctionColumn.new(function)}
         end
-
-        # add a available_columns for each tracker
-        @available_columns += Tracker.all.collect {|tracker| QueryTrackerColumn.new(tracker)}
       end
+      # add a available_columns for each tracker
+      @available_columns += Tracker.all.collect {|tracker| QueryTrackerColumn.new(tracker)}
       @available_columns
     end
 
