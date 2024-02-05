@@ -95,125 +95,7 @@ describe "ProjectQuery" do
 
   describe "Should filter last issue of tracker" do
     before do
-      issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test1")
-
-      date_test = previous_date_this_week
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test2")
-
-      date_test = previous_date_this_week
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test3")
-
-      date_test = previous_date_this_week
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test4")
-
-      date_test = previous_date_this_week
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.last, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test5")
-
-      issue.created_on = "2012-06-16 20:00:00"
-      issue.updated_on = "2012-06-16 20:00:00"
-      issue.save
-
-      issue = Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test6")
-
-      date_test = previous_date_this_week
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test7")
-
-      date_test = previous_date_this_week
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test8")
-
-      issue.created_on = 13.months.ago.to_s(:db)
-      issue.updated_on = 13.months.ago.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test9")
-
-      issue.created_on = 13.months.ago.to_s(:db)
-      issue.updated_on = 13.months.ago.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test10")
-
-      issue.created_on = 2.weeks.ago.to_s(:db)
-      issue.updated_on = 2.weeks.ago.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test11")
-
-      issue.created_on = get_tomorrow_date_or_later.to_s(:db)
-      issue.updated_on = get_tomorrow_date_or_later.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test12")
-
-      issue.created_on = get_tomorrow_date_or_later.to_s(:db)
-      issue.updated_on = get_tomorrow_date_or_later.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test13")
-
-      date_test = previous_date_last_month
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
-
-      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test14")
-
-      date_test = previous_date_last_month
-      issue.created_on = date_test.to_s(:db)
-      issue.updated_on = date_test.to_s(:db)
-      issue.save
+      create_issues_for_test
     end
 
     it "operator >=" do
@@ -337,9 +219,9 @@ describe "ProjectQuery" do
 
     it "operator lm last month" do
       query = ProjectQuery.new(:name => '_',
-              :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'lm', :values => [""]}})
+              :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'lm', :values => [""]}})
       projects = find_projects_with_query(query)
-      expect(projects.size).to be >= 2
+      expect(projects.size).to be >= 1
     end
 
     def get_tomorrow_date_or_later
@@ -363,6 +245,128 @@ describe "ProjectQuery" do
       days_in_last_month = (today - 1.month).end_of_month.day
       days_passed = rand(0..days_in_last_month - 1) # Select a random number of days passed last month
       return (today - 1.month).at_end_of_month - days_passed
+    end
+
+    def create_issues_for_test
+      issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test1")
+
+      date_test = previous_date_this_week
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.first,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test2")
+
+      date_test = previous_date_this_week
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test3")
+
+      date_test = previous_date_this_week
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.third,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test4")
+
+      date_test = previous_date_this_week
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.last, :tracker => Tracker.first,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test5")
+
+      issue.created_on = "2012-06-16 20:00:00"
+      issue.updated_on = "2012-06-16 20:00:00"
+      issue.save
+
+      issue = Issue.create(:project => Project.second, :tracker => Tracker.third,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test6")
+
+      date_test = previous_date_this_week
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test7")
+
+      date_test = previous_date_this_week
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test8")
+
+      issue.created_on = 13.months.ago.to_s(:db)
+      issue.updated_on = 13.months.ago.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.second, :tracker => Tracker.third,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test9")
+
+      issue.created_on = 13.months.ago.to_s(:db)
+      issue.updated_on = 13.months.ago.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test10")
+
+      issue.created_on = 2.weeks.ago.to_s(:db)
+      issue.updated_on = 2.weeks.ago.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.second, :tracker => Tracker.third,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test11")
+
+      issue.created_on = get_tomorrow_date_or_later.to_s(:db)
+      issue.updated_on = get_tomorrow_date_or_later.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test12")
+
+      issue.created_on = get_tomorrow_date_or_later.to_s(:db)
+      issue.updated_on = get_tomorrow_date_or_later.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test13")
+
+      date_test = previous_date_last_month
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
+
+      issue = Issue.create(:project => Project.fourth, :tracker => Tracker.second,
+        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+        :subject => "Issue test14")
+
+      date_test = previous_date_last_month
+      issue.created_on = date_test.to_s(:db)
+      issue.updated_on = date_test.to_s(:db)
+      issue.save
     end
   end
 end

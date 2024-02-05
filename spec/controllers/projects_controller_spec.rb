@@ -1,13 +1,14 @@
 require 'spec_helper'
+require "active_support/testing/assertions"
 
 describe ProjectsController, type: :controller do
   fixtures :projects, :users, :roles, :members, :member_roles, :issue_statuses,
            :trackers, :projects_trackers, :enumerations, :queries
 
-  include ActiveSupport::Testing::Assertions         
+  include ActiveSupport::Testing::Assertions
   render_views
   include Redmine::I18n
-  
+
   before do
     # reset current user
     User.current = nil
@@ -78,6 +79,92 @@ describe ProjectsController, type: :controller do
 
   describe "content columns in csv" do
     before do
+      create_issues_for_test
+    end
+
+    let(:tracker_1) { Tracker.find(1) }
+    let(:tracker_2) { Tracker.find(2) }
+    let(:tracker_3) { Tracker.find(3) }
+
+    it "public projects" do
+      columns = ["name", "last_issue_date_#{tracker_1.id}",
+                 "last_issue_date_#{tracker_2.id}",
+                 "last_issue_date_#{tracker_3.id}"]
+      get :index, params: { :set_filter => 1,
+                            :c => columns,
+                            :format => 'csv' }
+
+      expect(response).to be_successful
+      expect(response.content_type).to eq 'text/csv; header=present'
+
+      lines = response.body.chomp.split("\n")
+
+      expect(lines[0].split(',')[0]).to eq "Name"
+      expect(lines[0].split(',')[1]).to eq "Last issue date #{tracker_1.name}"
+      expect(lines[0].split(',')[2]).to eq "Last issue date #{tracker_2.name}"
+      expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
+
+      expect(lines[1].split(',')[0]).to eq Project.first.name
+      expect(lines[1].split(',')[1]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
+      expect(lines[1].split(',')[2]).to eq "\"\""
+      expect(lines[1].split(',')[3]).to eq "\"\""
+
+      expect(lines[2].split(',')[0]).to eq Project.last.name # first public child of first project
+      expect(lines[2].split(',')[1]).to eq "2012-06-16"
+      expect(lines[2].split(',')[2]).to eq "\"\""
+      expect(lines[2].split(',')[3]).to eq "\"\""
+
+      expect(lines[3].split(',')[0]).to eq Project.third.name # second public child of first project
+      expect(lines[3].split(',')[1]).to eq "\"\""
+      expect(lines[3].split(',')[2]).to eq "\"\""
+      expect(lines[3].split(',')[3]).to eq "\"\""
+
+      expect(lines[4].split(',')[0]).to eq Project.fourth.name # third public child of first project
+      expect(lines[4].split(',')[1]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
+      expect(lines[4].split(',')[2]).to eq convert_date_time_to_date(Date.tomorrow.to_s(:db))
+      expect(lines[4].split(',')[3]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
+    end
+
+    it "private projects" do
+      @request.session[:user_id] = 1 # permissions admin
+      columns = ["name", "last_issue_date_#{tracker_1.id}",
+                 "last_issue_date_#{tracker_2.id}",
+                 "last_issue_date_#{tracker_3.id}"]
+      get :index, params: { :set_filter => 1,
+                            :f => ["is_public", ""],
+                            :v => { "is_public" => ["1"] },
+                            :op => { "is_public" => "!" },
+                            :c => columns,
+                            :format => 'csv' }
+
+      expect(response).to be_successful
+      expect(response.content_type).to eq 'text/csv; header=present'
+
+      lines = response.body.chomp.split("\n")
+
+      expect(lines[0].split(',')[0]).to eq "Name"
+      expect(lines[0].split(',')[1]).to eq "Last issue date #{tracker_1.name}"
+      expect(lines[0].split(',')[2]).to eq "Last issue date #{tracker_2.name}"
+      expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
+
+      expect(lines[1].split(',')[0]).to eq Project.find(5).name # child of first project
+      expect(lines[1].split(',')[1]).to eq "\"\""
+      expect(lines[1].split(',')[2]).to eq "\"\""
+      expect(lines[1].split(',')[3]).to eq "\"\""
+
+      expect(lines[2].split(',')[0]).to eq Project.second.name
+      expect(lines[2].split(',')[1]).to eq "\"\""
+      expect(lines[2].split(',')[2]).to eq "\"\""
+      expect(lines[2].split(',')[3]).to eq convert_date_time_to_date(Date.tomorrow.to_s(:db))
+    end
+
+    def convert_date_time_to_date(date)
+      datetime = DateTime.parse(date)
+      formatted_date = datetime.strftime("%Y-%m-%d")
+      return formatted_date
+    end
+
+    def create_issues_for_test
       issue = Issue.create(:project => Project.first, :tracker => Tracker.first,
         :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
         :subject => "Issue project_first tracker_first 1")
@@ -181,88 +268,6 @@ describe ProjectsController, type: :controller do
       issue.created_on = Date.tomorrow.to_s(:db)
       issue.updated_on = Date.tomorrow.to_s(:db)
       issue.save
-    end
-
-    let(:tracker_1) {  Tracker.find(1) }
-    let(:tracker_2) {  Tracker.find(2) }
-    let(:tracker_3) {  Tracker.find(3) }
-
-    it "public projects" do
-      columns = ["name", "last_issue_date_#{tracker_1.id}",
-                 "last_issue_date_#{tracker_2.id}",
-                 "last_issue_date_#{tracker_3.id}"]
-      get :index, params: { :set_filter => 1,
-                            :c => columns,
-                            :format => 'csv' }
-
-      expect(response).to be_successful
-      expect(response.content_type).to eq 'text/csv; header=present'
-
-      lines = response.body.chomp.split("\n")
-
-      expect(lines[0].split(',')[0]).to eq "Name"
-      expect(lines[0].split(',')[1]).to eq "Last issue date #{tracker_1.name}"
-      expect(lines[0].split(',')[2]).to eq "Last issue date #{tracker_2.name}"
-      expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
-
-      expect(lines[1].split(',')[0]).to eq Project.first.name
-      expect(lines[1].split(',')[1]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
-      expect(lines[1].split(',')[2]).to eq "\"\""
-      expect(lines[1].split(',')[3]).to eq "\"\""
-
-      expect(lines[2].split(',')[0]).to eq Project.last.name # first public child of first project
-      expect(lines[2].split(',')[1]).to eq "2012-06-16"
-      expect(lines[2].split(',')[2]).to eq "\"\""
-      expect(lines[2].split(',')[3]).to eq "\"\""
-
-      expect(lines[3].split(',')[0]).to eq Project.third.name # second public child of first project
-      expect(lines[3].split(',')[1]).to eq "\"\""
-      expect(lines[3].split(',')[2]).to eq "\"\""
-      expect(lines[3].split(',')[3]).to eq "\"\""
-
-      expect(lines[4].split(',')[0]).to eq Project.fourth.name # third public child of first project
-      expect(lines[4].split(',')[1]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
-      expect(lines[4].split(',')[2]).to eq convert_date_time_to_date(Date.tomorrow.to_s(:db))
-      expect(lines[4].split(',')[3]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
-    end
-
-    it "private projects" do
-      @request.session[:user_id] = 1 # permissions admin
-      columns = ["name", "last_issue_date_#{tracker_1.id}",
-                 "last_issue_date_#{tracker_2.id}",
-                 "last_issue_date_#{tracker_3.id}"]
-      get :index, params: { :set_filter => 1,
-                            :f => ["is_public", ""],
-                            :v => { "is_public" => ["1"] },
-                            :op => { "is_public" => "!" },
-                            :c => columns,
-                            :format => 'csv' }
-
-      expect(response).to be_successful
-      expect(response.content_type).to eq 'text/csv; header=present'
-
-      lines = response.body.chomp.split("\n")
-
-      expect(lines[0].split(',')[0]).to eq "Name"
-      expect(lines[0].split(',')[1]).to eq "Last issue date #{tracker_1.name}"
-      expect(lines[0].split(',')[2]).to eq "Last issue date #{tracker_2.name}"
-      expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
-
-      expect(lines[1].split(',')[0]).to eq Project.find(5).name # child of first project
-      expect(lines[1].split(',')[1]).to eq "\"\""
-      expect(lines[1].split(',')[2]).to eq "\"\""
-      expect(lines[1].split(',')[3]).to eq "\"\""
-
-      expect(lines[2].split(',')[0]).to eq Project.second.name
-      expect(lines[2].split(',')[1]).to eq "\"\""
-      expect(lines[2].split(',')[2]).to eq "\"\""
-      expect(lines[2].split(',')[3]).to eq convert_date_time_to_date(Date.tomorrow.to_s(:db))
-    end
-
-    def convert_date_time_to_date(date)
-      datetime = DateTime.parse(date)
-      formatted_date = datetime.strftime("%Y-%m-%d")
-      return formatted_date
     end
   end
 end
