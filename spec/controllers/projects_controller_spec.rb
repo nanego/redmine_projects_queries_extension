@@ -105,12 +105,12 @@ describe ProjectsController, type: :controller do
       expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
 
       expect(lines[1].split(',')[0]).to eq Project.first.name
-      expect(lines[1].split(',')[1]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
+      expect(lines[1].split(',')[1].split(' ')[0]).to eq 2.days.ago.strftime("%m/%d/%Y")
       expect(lines[1].split(',')[2]).to eq "\"\""
       expect(lines[1].split(',')[3]).to eq "\"\""
 
       expect(lines[2].split(',')[0]).to eq Project.last.name # first public child of first project
-      expect(lines[2].split(',')[1]).to eq convert_date_time_to_date(12.years.ago.to_s(:db))
+      expect(lines[2].split(',')[1].split(' ')[0]).to eq 12.years.ago.strftime("%m/%d/%Y")
       expect(lines[2].split(',')[2]).to eq "\"\""
       expect(lines[2].split(',')[3]).to eq "\"\""
 
@@ -120,9 +120,9 @@ describe ProjectsController, type: :controller do
       expect(lines[3].split(',')[3]).to eq "\"\""
 
       expect(lines[4].split(',')[0]).to eq Project.fourth.name # third public child of first project
-      expect(lines[4].split(',')[1]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
-      expect(lines[4].split(',')[2]).to eq convert_date_time_to_date(Date.tomorrow.to_s(:db))
-      expect(lines[4].split(',')[3]).to eq convert_date_time_to_date(2.days.ago.to_s(:db))
+      expect(lines[4].split(',')[1].split(' ')[0]).to eq 2.days.ago.strftime("%m/%d/%Y")
+      expect(lines[4].split(',')[2].split(' ')[0]).to eq Date.tomorrow.strftime("%m/%d/%Y")
+      expect(lines[4].split(',')[3].split(' ')[0]).to eq 2.days.ago.strftime("%m/%d/%Y")
     end
 
     it "private projects" do
@@ -155,11 +155,11 @@ describe ProjectsController, type: :controller do
       expect(lines[2].split(',')[0]).to eq Project.second.name
       expect(lines[2].split(',')[1]).to eq "\"\""
       expect(lines[2].split(',')[2]).to eq "\"\""
-      expect(lines[2].split(',')[3]).to eq convert_date_time_to_date(Date.tomorrow.to_s(:db))
+      expect(lines[2].split(',')[3].split(' ')[0]).to eq Date.tomorrow.strftime("%m/%d/%Y")
     end
 
     def convert_date_time_to_date(date)
-      datetime = DateTime.parse(date + ' UTC').in_time_zone('Europe/Paris')
+      datetime = DateTime.parse(date).in_time_zone(Time.zone)
       formatted_date = datetime.strftime("%m/%d/%Y %I:%M %p")
       return formatted_date
     end
