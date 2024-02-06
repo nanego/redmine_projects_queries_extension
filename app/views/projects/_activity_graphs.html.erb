@@ -2,7 +2,7 @@
   <script type=text/javascript>
       <% summary = ProjectSummary.new(Project.pluck(:id)) %>
       cache = {
-          <%= @entries.map do |project|
+          <%= entries.map do |project|
             "#{project.id}:{
                 stats:'#{summary.activity_statistics[project.id].join(",")}',
                 users: #{summary.users_count[project.id].to_i},
@@ -14,7 +14,7 @@
       }
       $(function() {
           var $p
-          <% @entries.each do |project| %>
+          <% entries.each do |project| %>
           $p = $("#project-<%=project.id%>")
           $p.find(".barchart").html(cache[<%=project.id%>].stats)
           $p.find(".users").html(cache[<%=project.id%>].users)
