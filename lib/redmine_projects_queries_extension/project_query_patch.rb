@@ -63,7 +63,7 @@ module RedmineProjectsQueriesExtension
     class QueryTrackerColumn < QueryColumn
       def initialize(tracker)
         self.name = "last_issue_date_#{tracker.id}".to_sym
-        self.sortable = true
+        self.sortable = false
         self.groupable = false
         @inline = true
         @tracker = tracker
