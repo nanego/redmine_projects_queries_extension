@@ -100,9 +100,9 @@ describe ProjectsController, type: :controller do
       lines = response.body.chomp.split("\n")
 
       expect(lines[0].split(',')[0]).to eq "Name"
-      expect(lines[0].split(',')[1]).to eq "Last issue date #{tracker_1.name}"
-      expect(lines[0].split(',')[2]).to eq "Last issue date #{tracker_2.name}"
-      expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
+      expect(lines[0].split(',')[1]).to eq "Last issue #{tracker_1.name}"
+      expect(lines[0].split(',')[2]).to eq "Last issue #{tracker_2.name}"
+      expect(lines[0].split(',')[3]).to eq "Last issue #{tracker_3.name}"
 
       expect(lines[1].split(',')[0]).to eq Project.first.name
       expect(lines[1].split(',')[1].split(' ')[0]).to eq 2.days.ago.strftime("%m/%d/%Y")
@@ -143,9 +143,9 @@ describe ProjectsController, type: :controller do
       lines = response.body.chomp.split("\n")
 
       expect(lines[0].split(',')[0]).to eq "Name"
-      expect(lines[0].split(',')[1]).to eq "Last issue date #{tracker_1.name}"
-      expect(lines[0].split(',')[2]).to eq "Last issue date #{tracker_2.name}"
-      expect(lines[0].split(',')[3]).to eq "Last issue date #{tracker_3.name}"
+      expect(lines[0].split(',')[1]).to eq "Last issue #{tracker_1.name}"
+      expect(lines[0].split(',')[2]).to eq "Last issue #{tracker_2.name}"
+      expect(lines[0].split(',')[3]).to eq "Last issue #{tracker_3.name}"
 
       expect(lines[1].split(',')[0]).to eq Project.find(5).name # child of first project
       expect(lines[1].split(',')[1]).to eq "\"\""
