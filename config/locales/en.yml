@@ -10,4 +10,4 @@ en:
   field_users: Users
   please_select_less_columns: Please reduce the number of selected columns
   link_get_mail_addresses: Get mailing list
-  field_last_issue_date: "Last issue date %{value}"
+  field_last_issue_date: "Last issue %{value}"
