@@ -62,8 +62,10 @@ module RedmineProjectsQueriesExtension
 
     class QueryTrackerColumn < QueryColumn
       def initialize(tracker)
+        sql_to_sort_issues_by_created_on = Arel.sql("(SELECT MAX(created_on) FROM issues 
+          WHERE issues.project_id = projects.id AND issues.tracker_id = #{tracker.id})")
         self.name = "last_issue_date_#{tracker.id}".to_sym
-        self.sortable = false
+        self.sortable = sql_to_sort_issues_by_created_on
         self.groupable = false
         @inline = true
         @tracker = tracker
