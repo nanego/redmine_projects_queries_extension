@@ -92,41 +92,6 @@ module RedmineProjectsQueriesExtension
         super
       end
     end
-
-    def filters_options_for_select(query)
-
-      s_super = super(query)
-      str = s_super
-      # get options string
-      ungrouped = get_options_by_type(query, :last_issue_date, :label_issue_plural)
-      # Regroup options then replace them by its groups
-      str = regroup_options_by_type(l(:label_issue_plural), ungrouped, s_super) unless ungrouped.empty?
-      str.html_safe
-    end
-
-    def get_options_by_type(query, type, label)
-      ungrouped = []
-      query.available_filters.map do |field, field_options|
-        if field_options[:type] == type
-          group = label
-        end
-        if group
-          ungrouped << [field_options[:name], field]
-        end
-      end
-
-      return ungrouped
-    end
-
-    def regroup_options_by_type(label, options, s_super)
-      str_options = options_for_select_without_non_empty_blank_option(options, nil)
-      str = []
-      str = [label, options]
-
-      str_group = grouped_options_for_select([str])
-      result = s_super.sub(str_options, str_group)
-      result
-    end
   end
 end
 

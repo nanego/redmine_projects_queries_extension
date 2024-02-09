@@ -94,7 +94,7 @@ module RedmineProjectsQueriesExtension
 
       # add a filter for each tracker
       Tracker.all.each do |tracker|
-        add_available_filter "last_issue_date_#{tracker.id}", :type => :last_issue_date, :name => l(:field_last_issue_date, :value => tracker.name)
+        add_available_filter "last_issue_date_#{tracker.id}", :type => :date, :name => l(:field_last_issue_date, :value => tracker.name)
       end
 
       if self.class.has_organizations_plugin?
@@ -128,8 +128,6 @@ module RedmineProjectsQueriesExtension
       json = {}
       available_filters.each do |field, filter|
         options = {:type => filter[:type], :name => filter[:name]}
-        # This condition is specifically for JavaScript to prevent the overriding of the buildFilterRow method.
-        options = {:type => "date", :name => filter[:name]} if filter[:type] == :last_issue_date
         options[:name] = l("field_project") if field == "id"
         options[:name] = l("label_member") if field == "member_id"
         options[:remote] = true if filter.remote
@@ -227,7 +225,3 @@ module RedmineProjectsQueriesExtension
 end
 
 ProjectQuery.prepend RedmineProjectsQueriesExtension::ProjectQueryPatch
-
-class ProjectQuery < Query
-  self.operators_by_filter_type.merge!({ :last_issue_date => self.operators_by_filter_type[:date] })
-end

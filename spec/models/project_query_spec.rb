@@ -99,7 +99,8 @@ describe "ProjectQuery" do
     end
 
     it "operator >=" do
-      query = ProjectQuery.new(:name => '_', :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>=', :values => [Date.today.since(10.days).to_s(:db)]}})
+      query = ProjectQuery.new(:name => '_', 
+                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>=', :values => [Date.today.since(10.days).to_s(:db)]}})
       projects = find_projects_with_query(query)
 
       expect(projects.size).to eq(0)
