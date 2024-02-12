@@ -1,14 +1,15 @@
 require 'spec_helper'
-require 'projects_queries_helper'
+require 'queries_helper'
+describe QueriesHelper, type: :helper do
 
-describe ProjectsQueriesHelper, type: :helper do
+  fixtures :projects, :trackers
 
-  fixtures :projects
-
-  it "should display parent column as a link to a project" do
-    query = ProjectQuery.new(:name => '_', :column_names => ["name", "parent_id"])
-    content = column_value(QueryColumn.new(:parent_id), query.results_scope.select{|e| e.parent_id == 1}.first, Project.find(1))
-    expect(content).to have_link("eCookbook")
+  it "should group trackers columns" do
+    options = filters_options_for_select(ProjectQuery.new)
+    expect(options).to have_selector('optgroup[label=Date]',  count: 1)
+    Tracker.all.each do |tracker|
+      expect(options).to have_selector("optgroup > option[value=last_issue_date_#{tracker.id}]")
+    end
   end
 
 end
