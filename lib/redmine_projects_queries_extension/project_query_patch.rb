@@ -62,7 +62,7 @@ module RedmineProjectsQueriesExtension
 
     class QueryTrackerColumn < QueryColumn
       def initialize(tracker)
-        sql_to_sort_issues_by_created_on = Arel.sql("(SELECT MAX(created_on) FROM issues 
+        sql_to_sort_issues_by_created_on = Arel.sql("(SELECT MAX(created_on) FROM issues
           WHERE issues.project_id = projects.id AND issues.tracker_id = #{tracker.id})")
         self.name = "last_issue_date_#{tracker.id}".to_sym
         self.sortable = sql_to_sort_issues_by_created_on
@@ -93,7 +93,7 @@ module RedmineProjectsQueriesExtension
       add_available_filter "updated_on", :type => :date_past
 
       # add a filter for each tracker
-      Tracker.all.each do |tracker|
+      Tracker.order(:name).each do |tracker|
         add_available_filter "last_issue_date_#{tracker.id}", :type => :date, :name => l(:field_last_issue_date, :value => tracker.name)
       end
 
@@ -170,7 +170,7 @@ module RedmineProjectsQueriesExtension
         parts = field.split("_")
         if parts.last.match?(/\d+/)
           tracker_id = parts.last.to_i
-          sql = get_issues_by_tracker_sql(tracker_id, operator, value)
+          sql = get_last_issue_by_tracker_sql(tracker_id, operator, value)
         else
           super
         end
@@ -179,15 +179,24 @@ module RedmineProjectsQueriesExtension
       end
     end
 
-    def get_issues_by_tracker_sql(tracker_id, operator, value)
+    def get_last_issue_by_tracker_sql(tracker_id, operator, value)
       issue_table = Issue.table_name
-      sql_date = sql_for_field("created_on", operator, value, issue_table, "created_on")
+      new_operator = operator
+      inclusion_statement = "IN"
+
+      # the "None" operator should return other elements that do not have a date.
+      if operator == "!*"
+        new_operator = "*"
+        inclusion_statement = "NOT IN"
+      end
+
+      sql_date = sql_for_field("created_on", new_operator, value, issue_table, "created_on")
 
       sql_project = "SELECT project_id, MAX(id) AS id, MAX(created_on) AS created_on  from #{issue_table} WHERE " +
-                     "tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
+                      "tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
       project_ids = "SELECT project_id FROM (#{sql_project}) AS latest_issues"
 
-      sql = "#{Project.table_name}.id  IN (#{project_ids})"
+      sql = "#{Project.table_name}.id  #{inclusion_statement} (#{project_ids})"
       sql
     end
 
