@@ -93,7 +93,7 @@ module RedmineProjectsQueriesExtension
       add_available_filter "updated_on", :type => :date_past
 
       # add a filter for each tracker
-      Tracker.all.each do |tracker|
+      Tracker.order(:name).each do |tracker|
         add_available_filter "last_issue_date_#{tracker.id}", :type => :date, :name => l(:field_last_issue_date, :value => tracker.name)
       end
 
