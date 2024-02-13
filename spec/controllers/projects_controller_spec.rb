@@ -93,7 +93,7 @@ describe ProjectsController, type: :controller do
     let(:two_days_ago_formatted) { 2.days.ago.to_s(:db) }
     let(:twelve_years_ago_formatted) { 12.years.ago.to_s(:db) }
 
-    it "public projects" do
+    it "Should only display public projects for anonymous users " do
       columns = ["name", "last_issue_date_#{tracker_1.id}",
                  "last_issue_date_#{tracker_2.id}",
                  "last_issue_date_#{tracker_3.id}"]
@@ -132,7 +132,7 @@ describe ProjectsController, type: :controller do
       expect(lines[4].split(',')[3].split[0]).to eq format_date(two_days_ago_formatted)
     end
 
-    it "private projects" do
+    it "Should display only private projects when user has permission and is_public is false" do
       @request.session[:user_id] = 1 # permissions admin
       columns = ["name", "last_issue_date_#{tracker_1.id}",
                  "last_issue_date_#{tracker_2.id}",
