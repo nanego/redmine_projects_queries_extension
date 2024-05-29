@@ -27,6 +27,7 @@ end
 
 def create_issue_with(creation_date:, params:)
   new_issue = Issue.find_or_create_by(params)
+  new_issue.reload
   new_issue.update(:created_on => creation_date, :updated_on => creation_date)
   new_issue.save
 end
