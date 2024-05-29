@@ -11,13 +11,13 @@ class ProjectQuery < Query
     Redmine::Plugin.installed?(:redmine_limited_visibility)
   end
 
-  self.available_columns << QueryColumn.new(:updated_on, :sortable => "#{Project.table_name}.updated_on", :default_order => 'desc') unless self.available_columns.select {|c| c.name == :updated_on}.present?
-  self.available_columns << QueryColumn.new(:activity, :groupable => false, :sortable => ProjectSummary.sql_activity_records) unless self.available_columns.select {|c| c.name == :activity}.present?
-  self.available_columns << QueryColumn.new(:issues, :sortable => false) unless self.available_columns.select {|c| c.name == :issues}.present?
-  self.available_columns << QueryColumn.new(:role, :sortable => false) unless self.available_columns.select {|c| c.name == :role}.present?
-  self.available_columns << QueryColumn.new(:members, :sortable => false) unless self.available_columns.select {|c| c.name == :members}.present?
-  self.available_columns << QueryColumn.new(:users, :sortable => false) unless self.available_columns.select {|c| c.name == :users}.present?
-  self.available_columns << QueryColumn.new(:description) unless self.available_columns.select {|c| c.name == :description}.present?
+  self.available_columns << QueryColumn.new(:updated_on, :sortable => "#{Project.table_name}.updated_on", :default_order => 'desc') unless self.available_columns.select { |c| c.name == :updated_on }.present?
+  self.available_columns << QueryColumn.new(:activity, :groupable => false, :sortable => ProjectSummary.sql_activity_records) unless self.available_columns.select { |c| c.name == :activity }.present?
+  self.available_columns << QueryColumn.new(:issues, :sortable => false) unless self.available_columns.select { |c| c.name == :issues }.present?
+  self.available_columns << QueryColumn.new(:role, :sortable => false) unless self.available_columns.select { |c| c.name == :role }.present?
+  self.available_columns << QueryColumn.new(:members, :sortable => false) unless self.available_columns.select { |c| c.name == :members }.present?
+  self.available_columns << QueryColumn.new(:users, :sortable => false) unless self.available_columns.select { |c| c.name == :users }.present?
+  self.available_columns << QueryColumn.new(:description) unless self.available_columns.select { |c| c.name == :description }.present?
   self.available_columns << QueryColumn.new(:organizations, :sortable => false, :default_order => 'asc') if self.has_organizations_plugin?
 end
 
@@ -64,7 +64,7 @@ module RedmineProjectsQueriesExtension
       def initialize(tracker)
         sql_to_sort_issues_by_created_on = Arel.sql("(SELECT MAX(created_on) FROM issues
           WHERE issues.project_id = projects.id AND issues.tracker_id = #{tracker.id})")
-        self.name = "last_issue_date_#{tracker.id}".to_sym
+        self.name = "last_issue_date_for_tracker_#{tracker.id}".to_sym
         self.sortable = sql_to_sort_issues_by_created_on
         self.groupable = false
         @inline = true
@@ -72,7 +72,7 @@ module RedmineProjectsQueriesExtension
       end
 
       def caption
-        l(:field_last_issue_date, :value => @tracker.name)
+        l(:field_last_issue_date_for_tracker, :value => @tracker.name)
       end
 
       def tracker
@@ -85,7 +85,7 @@ module RedmineProjectsQueriesExtension
 
       member_values = []
       member_values << ["<< #{l(:label_me)} >>", "me"] if User.current.logged?
-      member_values += all_users.collect {|s| [s.name, s.id.to_s]}
+      member_values += all_users.collect { |s| [s.name, s.id.to_s] }
       add_available_filter("member_id",
                            :type => :list, :values => member_values
       ) unless member_values.empty?
@@ -94,13 +94,13 @@ module RedmineProjectsQueriesExtension
 
       # add a filter for each tracker
       Tracker.order(:name).each do |tracker|
-        add_available_filter "last_issue_date_#{tracker.id}", :type => :date, :name => l(:field_last_issue_date, :value => tracker.name)
+        add_available_filter "last_issue_date_for_tracker_#{tracker.id}", :type => :date, :name => l(:field_last_issue_date_for_tracker, :value => tracker.name)
       end
 
       if self.class.has_organizations_plugin?
         directions_values = Organization.select("name, id").where('direction = ?', true).order("name")
-        add_available_filter("organizations", :type => :list, :values => directions_values.collect {|s| [s.name, s.id.to_s]})
-        organizations_values = Organization.all.collect {|s| [s.fullname, s.id.to_s]}.sort_by {|v| v.first}
+        add_available_filter("organizations", :type => :list, :values => directions_values.collect { |s| [s.name, s.id.to_s] })
+        organizations_values = Organization.all.collect { |s| [s.fullname, s.id.to_s] }.sort_by { |v| v.first }
         add_available_filter("organization", :type => :list, :values => organizations_values)
       end
 
@@ -113,13 +113,13 @@ module RedmineProjectsQueriesExtension
         # role display is NOT strictly related to organizations plugin but for
         # now the plugin only knows how to display these columns if the
         # organizations plugin is present => we display organizations names in the column...
-        @available_columns += Role.where("builtin = 0").order("position asc").all.collect {|role| QueryRoleColumn.new(role)}
+        @available_columns += Role.where("builtin = 0").order("position asc").all.collect { |role| QueryRoleColumn.new(role) }
         if self.class.has_limited_visibility_plugin?
-          @available_columns += Function.order("position asc").all.collect {|function| QueryFunctionColumn.new(function)}
+          @available_columns += Function.order("position asc").all.collect { |function| QueryFunctionColumn.new(function) }
         end
       end
       # add a available_columns for each tracker
-      @available_columns += Tracker.all.collect {|tracker| QueryTrackerColumn.new(tracker)}
+      @available_columns += Tracker.all.collect { |tracker| QueryTrackerColumn.new(tracker) }
       @available_columns
     end
 
@@ -127,7 +127,7 @@ module RedmineProjectsQueriesExtension
     def available_filters_as_json
       json = {}
       available_filters.each do |field, filter|
-        options = {:type => filter[:type], :name => filter[:name]}
+        options = { :type => filter[:type], :name => filter[:name] }
         options[:name] = l("field_project") if field == "id"
         options[:name] = l("label_member") if field == "member_id"
         options[:remote] = true if filter.remote
@@ -158,15 +158,15 @@ module RedmineProjectsQueriesExtension
       end
       member_table = Member.table_name
       project_table = Project.table_name
-      #return only the projects including all the selected members
+      # return only the projects including all the selected members
       "#{project_table}.id #{ operator == '=' ? 'IN' : 'NOT IN' } (SELECT #{member_table}.project_id FROM #{member_table} " +
-          "JOIN #{project_table} ON #{member_table}.project_id = #{project_table}.id AND " +
-          sql_for_field(field, '=', value, member_table, 'user_id') +
-          "GROUP BY #{member_table}.project_id HAVING count(#{member_table}.project_id) = #{value.size}" + ') '
+        "JOIN #{project_table} ON #{member_table}.project_id = #{project_table}.id AND " +
+        sql_for_field(field, '=', value, member_table, 'user_id') +
+        "GROUP BY #{member_table}.project_id HAVING count(#{member_table}.project_id) = #{value.size}" + ') '
     end
 
-    def sql_for_field(field, operator, value, db_table, db_field, is_custom_filter=false)
-      if field.start_with?("last_issue_date_")
+    def sql_for_field(field, operator, value, db_table, db_field, is_custom_filter = false)
+      if field.start_with?("last_issue_date_for_tracker_")
         parts = field.split("_")
         if parts.last.match?(/\d+/)
           tracker_id = parts.last.to_i
@@ -193,7 +193,7 @@ module RedmineProjectsQueriesExtension
       sql_date = sql_for_field("created_on", new_operator, value, issue_table, "created_on")
 
       sql_project = "SELECT project_id, MAX(id) AS id, MAX(created_on) AS created_on  from #{issue_table} WHERE " +
-                      "tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
+        "tracker_id = #{tracker_id} AND #{sql_date} GROUP BY project_id"
       project_ids = "SELECT project_id FROM (#{sql_project}) AS latest_issues"
 
       sql = "#{Project.table_name}.id  #{inclusion_statement} (#{project_ids})"

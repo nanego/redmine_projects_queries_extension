@@ -23,7 +23,7 @@ describe ProjectsController, type: :controller do
   end
 
   it "should index with default filter" do
-    get :index, params: {:set_filter => 1}
+    get :index, params: { :set_filter => 1 }
     expect(response).to be_successful
     assert_template 'index'
     refute_nil assigns(:entries)
@@ -31,25 +31,25 @@ describe ProjectsController, type: :controller do
     query = assigns(:query)
     refute_nil query
     # default filter
-    assert_equal({'status' => {:operator => '=', :values => ['1']}}, query.filters)
+    assert_equal({ 'status' => { :operator => '=', :values => ['1'] } }, query.filters)
   end
 
   it "should index with filter" do
-    get :index, params: {:set_filter => 1,
-                         :f => ['is_public'],
-                         :op => {'is_public' => '='},
-                         :v => {'is_public' => ['0']}}
+    get :index, params: { :set_filter => 1,
+                          :f => ['is_public'],
+                          :op => { 'is_public' => '=' },
+                          :v => { 'is_public' => ['0'] } }
     expect(response).to be_successful
     assert_template 'index'
     refute_nil assigns(:entries)
 
     query = assigns(:query)
     refute_nil query
-    assert_equal({'is_public' => {:operator => '=', :values => ['0']}}, query.filters)
+    assert_equal({ 'is_public' => { :operator => '=', :values => ['0'] } }, query.filters)
   end
 
   it "should index with empty filters" do
-    get :index, params: {:set_filter => 1, :fields => ['']}
+    get :index, params: { :set_filter => 1, :fields => [''] }
     expect(response).to be_successful
     assert_template 'index'
     refute_nil assigns(:entries)
@@ -61,7 +61,7 @@ describe ProjectsController, type: :controller do
   end
 
   it "should index csv with all columns" do
-    get :index, params: {:format => 'csv', :c => ['all_inline']}
+    get :index, params: { :format => 'csv', :c => ['all_inline'] }
     expect(response).to be_successful
     refute_nil assigns(:entries)
     expect(response.content_type).to eq 'text/csv; header=present'
@@ -71,7 +71,7 @@ describe ProjectsController, type: :controller do
 
   it "should index with columns" do
     columns = ['name', 'status', 'created_on']
-    get :index, params: {:set_filter => 1, :c => columns}
+    get :index, params: { :set_filter => 1, :c => columns }
     expect(response).to be_successful
 
     # query should use specified columns
@@ -94,9 +94,9 @@ describe ProjectsController, type: :controller do
     let(:twelve_years_ago_formatted) { 12.years.ago.to_s(:db) }
 
     it "Should only display public projects for anonymous users " do
-      columns = ["name", "last_issue_date_#{tracker_1.id}",
-                 "last_issue_date_#{tracker_2.id}",
-                 "last_issue_date_#{tracker_3.id}"]
+      columns = ["name", "last_issue_date_for_tracker_#{tracker_1.id}",
+                 "last_issue_date_for_tracker_#{tracker_2.id}",
+                 "last_issue_date_for_tracker_#{tracker_3.id}"]
       get :index, params: { :set_filter => 1,
                             :c => columns,
                             :format => 'csv' }
@@ -134,9 +134,9 @@ describe ProjectsController, type: :controller do
 
     it "Should display only private projects when user has permission and is_public is false" do
       @request.session[:user_id] = 1 # permissions admin
-      columns = ["name", "last_issue_date_#{tracker_1.id}",
-                 "last_issue_date_#{tracker_2.id}",
-                 "last_issue_date_#{tracker_3.id}"]
+      columns = ["name", "last_issue_date_for_tracker_#{tracker_1.id}",
+                 "last_issue_date_for_tracker_#{tracker_2.id}",
+                 "last_issue_date_for_tracker_#{tracker_3.id}"]
       get :index, params: { :set_filter => 1,
                             :f => ["is_public", ""],
                             :v => { "is_public" => ["1"] },
@@ -168,70 +168,71 @@ describe ProjectsController, type: :controller do
     def create_issues_for_test
       thirteen_months_ago_formatted = 13.months.ago.to_s(:db)
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue project_first tracker_first 1")
-      update_last_issue_dates(two_days_ago_formatted)
+      create_issue_with(creation_date: two_days_ago_formatted,
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue project_first tracker_first 1" })
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue project_first tracker_first 2")
-      update_last_issue_dates(3.days.ago.to_s(:db))
+      create_issue_with(creation_date: 3.days.ago.to_s(:db),
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue project_first tracker_first 2" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test2")
-      update_last_issue_dates(two_days_ago_formatted)
+      create_issue_with(creation_date: two_days_ago_formatted,
+                        params: { :project => Project.fourth, :tracker => Tracker.first,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test2" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test3")
-      update_last_issue_dates(two_days_ago_formatted)
+      create_issue_with(creation_date: two_days_ago_formatted,
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test3" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test4")
-      update_last_issue_dates(two_days_ago_formatted)
+      create_issue_with(creation_date: two_days_ago_formatted,
+                        params: { :project => Project.fourth, :tracker => Tracker.third,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test4" })
 
-      Issue.create(:project => Project.last, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test5")
-      update_last_issue_dates(twelve_years_ago_formatted)
+      create_issue_with(creation_date: twelve_years_ago_formatted,
+                        params: { :project => Project.last, :tracker => Tracker.first,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test5" })
 
-      Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test6")
-      update_last_issue_dates(two_days_ago_formatted)
+      create_issue_with(creation_date: two_days_ago_formatted,
+                        params: { :project => Project.second, :tracker => Tracker.third,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test6" })
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test7")
-      update_last_issue_dates(7.days.ago.to_s(:db))
+      create_issue_with(creation_date: 7.days.ago.to_s(:db),
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test7" })
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test8")
-      update_last_issue_dates(thirteen_months_ago_formatted)
+      create_issue_with(creation_date: thirteen_months_ago_formatted,
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test8" })
 
-      Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test9")
-      update_last_issue_dates(thirteen_months_ago_formatted)
+      create_issue_with(creation_date: thirteen_months_ago_formatted,
+                        params: { :project => Project.second, :tracker => Tracker.third,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test9" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test10")
-      update_last_issue_dates(2.weeks.ago.to_s(:db))
+      create_issue_with(creation_date: 2.weeks.ago.to_s(:db),
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test10" })
 
-      Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test11")
-      update_last_issue_dates(tomorrow_date_formatted)
+      create_issue_with(creation_date: tomorrow_date_formatted,
+                        params: { :project => Project.second, :tracker => Tracker.third,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test11" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test12")
-      update_last_issue_dates(tomorrow_date_formatted)
+      create_issue_with(creation_date: tomorrow_date_formatted,
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test12" })
+
     end
   end
 end

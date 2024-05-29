@@ -33,11 +33,11 @@ describe ProjectSummary do
   end
 
   describe "#activity_records" do
-    #TODO: how to test that?
+    # TODO: how to test that?
   end
 
   describe "#activity_period" do
-    #TODO: how to test that *reliably*?
+    # TODO: how to test that *reliably*?
   end
 
   describe "#activity_statistics" do

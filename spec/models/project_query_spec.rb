@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require File.dirname(__FILE__) + "/../support/projects_queries_extension_spec_helpers"
+require_relative "../support/projects_queries_extension_spec_helpers"
 
 describe "ProjectQuery" do
   fixtures :projects, :users, :roles, :members, :member_roles, :issue_statuses,
@@ -21,8 +21,8 @@ describe "ProjectQuery" do
     query = ProjectQuery.new(:name => '_')
     project_name_filter = query.available_filters["id"]
     refute_nil project_name_filter
-    project_ids = project_name_filter[:values].map{|p| p[1]}
-    assert project_ids.include?("1")  # public project
+    project_ids = project_name_filter[:values].map { |p| p[1] }
+    assert project_ids.include?("1") # public project
     assert !project_ids.include?("2") # private project user cannot see
   end
 
@@ -68,7 +68,7 @@ describe "ProjectQuery" do
 
   it "should operator is not on multi list custom field" do
     f = ProjectCustomField.create!(:name => 'filter', :field_format => 'list', :is_filter => true, :is_for_all => true,
-                                 :possible_values => ['value1', 'value2', 'value3'], :multiple => true)
+                                   :possible_values => ['value1', 'value2', 'value3'], :multiple => true)
     CustomValue.create!(:custom_field => f, :customized => Project.find(1), :value => 'value1')
     CustomValue.create!(:custom_field => f, :customized => Project.find(1), :value => 'value2')
     CustomValue.create!(:custom_field => f, :customized => Project.find(3), :value => 'value1')
@@ -88,7 +88,7 @@ describe "ProjectQuery" do
 
   it "should filter member" do
     User.current = User.find(3)
-    query = ProjectQuery.new(:name => '_', :filters => { 'member_id' => {:operator => '=', :values => ['me']}})
+    query = ProjectQuery.new(:name => '_', :filters => { 'member_id' => { :operator => '=', :values => ['me'] } })
     result = find_projects_with_query(query)
     refute_nil result
     assert !result.empty?
@@ -104,14 +104,14 @@ describe "ProjectQuery" do
     it "operator >=" do
       future_date = Date.today.since(10.days).strftime("%Y-%m-%d")
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>=', :values => [future_date]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '>=', :values => [future_date] } })
       projects = find_projects_with_query(query)
 
       expect(projects.size).to eq(0)
 
       twenty_days_ago_formatted = 20.days.ago.strftime("%Y-%m-%d")
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>=', :values => [twenty_days_ago_formatted]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '>=', :values => [twenty_days_ago_formatted] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2) # project 1,4
       expect(projects.map(&:id)).to include(1, 4)
@@ -119,13 +119,13 @@ describe "ProjectQuery" do
 
     it "operator =" do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '=', :values => ["2012-06-16"]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '=', :values => ["2012-06-16"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(last_project.id)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '=', :values => ["2012-06-16"]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => '=', :values => ["2012-06-16"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(0)
     end
@@ -133,14 +133,14 @@ describe "ProjectQuery" do
     it "operator <=" do
       current_date_formatted = Date.today.strftime("%Y-%m-%d")
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<=', :values => [current_date_formatted]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => '<=', :values => [current_date_formatted] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
 
       seven_months_ago_formatted = 7.months.ago.strftime("%Y-%m-%d")
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<=', :values => [seven_months_ago_formatted]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => '<=', :values => [seven_months_ago_formatted] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(2)
@@ -148,18 +148,18 @@ describe "ProjectQuery" do
 
     it "operator this week w" do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'w', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => 'w', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'w', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => 'w', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'w', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => 'w', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
@@ -167,19 +167,19 @@ describe "ProjectQuery" do
 
     it "operator y this year" do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => 'y', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => 'y', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(1, 4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'y', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => 'y', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => 'y', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => 'y', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
@@ -187,19 +187,19 @@ describe "ProjectQuery" do
 
     it "operator <t- more of " do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '<t-', :values => ["10"]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '<t-', :values => ["10"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(1, last_project.id)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '<t-', :values => ["10"]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => '<t-', :values => ["10"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '<t-', :values => ["10"]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => '<t-', :values => ["10"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(2)
@@ -207,40 +207,40 @@ describe "ProjectQuery" do
 
     it "operator >t- less than " do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '>t-', :values => ["18"]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '>t-', :values => ["18"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(1, 4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '>t-', :values => ["19"]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => '>t-', :values => ["19"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '>t-', :values => ["20"]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => '>t-', :values => ["20"] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
     end
 
-    it "operator !* None " do
+    it "operator !* None" do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '!*', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '!*', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(3)
 
       expect(projects.map(&:id)).to include(2, 3, 5)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '!*', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => '!*', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(5)
       expect(projects.map(&:id)).to_not include(4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '!*', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => '!*', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(4)
       expect(projects.map(&:id)).to_not include(2, 4)
@@ -248,20 +248,19 @@ describe "ProjectQuery" do
 
     it "operator * All" do
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.first.id}" => {:operator => '*', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_1" => { :operator => '*', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(3)
-
       expect(projects.map(&:id)).to include(1, 4, last_project.id)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => '*', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => '*', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(1)
       expect(projects.map(&:id)).to include(4)
 
       query = ProjectQuery.new(:name => '_',
-                                :filters => { "last_issue_date_#{Tracker.third.id}" => {:operator => '*', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_3" => { :operator => '*', :values => [""] } })
       projects = find_projects_with_query(query)
       expect(projects.size).to eq(2)
       expect(projects.map(&:id)).to include(2, 4)
@@ -269,84 +268,87 @@ describe "ProjectQuery" do
 
     it "operator lm last month" do
       query = ProjectQuery.new(:name => '_',
-              :filters => { "last_issue_date_#{Tracker.second.id}" => {:operator => 'lm', :values => [""]}})
+                               :filters => { "last_issue_date_for_tracker_2" => { :operator => 'lm', :values => [""] } })
       projects = find_projects_with_query(query)
+
       expect(projects.size).to be >= 1
+      expect(projects.map(&:id)).to include(4) # project 4 has an issue created last month
     end
 
     def create_issues_for_test
-      date_test_this_week = random_date_this_week.to_s(:db)
-      date_tomorrow_or_later = get_tomorrow_date_or_later.to_s(:db)
+      past_date_this_week = random_date_this_week.to_s(:db)
+      future_date_tomorrow_or_later = get_tomorrow_date_or_later.to_s(:db)
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test1")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test1" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test2")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { :project => Project.fourth, :tracker => Tracker.first,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test2" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test3")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test3" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test4")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { :project => Project.fourth, :tracker => Tracker.third,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test4" })
 
-      Issue.create(:project => last_project, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test5")
-      update_last_issue_dates("2012-06-16 20:00:00")
+      create_issue_with(creation_date: "2012-06-16 20:00:00",
+                        params: { :project => last_project, :tracker => Tracker.first,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test5" })
 
-      Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test6")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { :project => Project.second, :tracker => Tracker.third,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test6" })
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test7")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test7" })
 
-      Issue.create(:project => Project.first, :tracker => Tracker.first,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test8")
-      update_last_issue_dates(13.months.ago.to_s(:db))
+      create_issue_with(creation_date: 13.months.ago.to_s(:db),
+                        params: { project_id: 1, :tracker => Tracker.first,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test8" })
 
-      Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test9")
-      update_last_issue_dates(13.months.ago.to_s(:db))
+      create_issue_with(creation_date: 13.months.ago.to_s(:db),
+                        params: { :project => Project.second, :tracker => Tracker.third,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test9" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test10")
-      update_last_issue_dates(2.weeks.ago.to_s(:db))
+      create_issue_with(creation_date: 2.weeks.ago.to_s(:db),
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test10" })
 
-      Issue.create(:project => Project.second, :tracker => Tracker.third,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test11")
-      update_last_issue_dates(date_tomorrow_or_later)
+      create_issue_with(creation_date: future_date_tomorrow_or_later,
+                        params: { :project => Project.second, :tracker => Tracker.third,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test11" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test12")
-      update_last_issue_dates(date_tomorrow_or_later)
+      create_issue_with(creation_date: future_date_tomorrow_or_later,
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test12" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test13")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: past_date_this_week,
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test13" })
 
-      Issue.create(:project => Project.fourth, :tracker => Tracker.second,
-        :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
-        :subject => "Issue test14")
-      update_last_issue_dates(date_test_this_week)
+      create_issue_with(creation_date: Date.today.prev_month.to_s(:db),
+                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                                  author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
+                                  :subject => "Issue test14" })
+
     end
   end
 end

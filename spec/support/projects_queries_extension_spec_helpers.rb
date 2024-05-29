@@ -25,8 +25,8 @@ def random_date_last_month
   return (today - 1.month).at_end_of_month - days_passed
 end
 
-def update_last_issue_dates(new_date)
-  issue = Issue.last
-  issue.update(:created_on => new_date, :updated_on => new_date)
-  issue.save
+def create_issue_with(creation_date:, params:)
+  new_issue = Issue.find_or_create_by(params)
+  new_issue.update(:created_on => creation_date, :updated_on => creation_date)
+  new_issue.save
 end
