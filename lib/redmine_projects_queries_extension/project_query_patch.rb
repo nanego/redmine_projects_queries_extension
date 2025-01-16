@@ -12,13 +12,13 @@ class ProjectQuery < Query
   end
 
   self.available_columns << QueryColumn.new(:updated_on, :sortable => "#{Project.table_name}.updated_on", :default_order => 'desc') unless self.available_columns.select { |c| c.name == :updated_on }.present?
-  self.available_columns << QueryColumn.new(:activity, :groupable => false, :sortable => ProjectSummary.sql_activity_records) unless self.available_columns.select { |c| c.name == :activity }.present?
+  self.available_columns << QueryColumn.new(:activity, :groupable => false, :sortable => ProjectSummary.sql_activity_records) unless self.available_columns.select { |c| c.name == :activity }.present? || !ActiveRecord::Base.connection.table_exists?('journals')
   self.available_columns << QueryColumn.new(:issues, :sortable => false) unless self.available_columns.select { |c| c.name == :issues }.present?
   self.available_columns << QueryColumn.new(:role, :sortable => false) unless self.available_columns.select { |c| c.name == :role }.present?
   self.available_columns << QueryColumn.new(:members, :sortable => false) unless self.available_columns.select { |c| c.name == :members }.present?
   self.available_columns << QueryColumn.new(:users, :sortable => false) unless self.available_columns.select { |c| c.name == :users }.present?
   self.available_columns << QueryColumn.new(:description) unless self.available_columns.select { |c| c.name == :description }.present?
-  self.available_columns << QueryColumn.new(:organizations, :sortable => false, :default_order => 'asc') if self.has_organizations_plugin?
+  self.available_columns << QueryColumn.new(:organizations, :sortable => false, :default_order => 'asc') if self.has_organizations_plugin? && !self.available_columns.select { |c| c.name == :organizations }.present?
 end
 
 module RedmineProjectsQueriesExtension

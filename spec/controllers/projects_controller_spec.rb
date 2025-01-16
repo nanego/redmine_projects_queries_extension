@@ -63,7 +63,7 @@ describe ProjectsController, type: :controller do
   it "should index csv with all columns" do
     get :index, params: { :format => 'csv', :c => ['all_inline'] }
     expect(response).to be_successful
-    refute_nil assigns(:entries)
+    refute_nil assigns(:query)
     expect(response.content_type).to eq 'text/csv; header=present'
     lines = response.body.chomp.split("\n")
     expect(lines[0].split(',').size).to eq assigns(:query).available_inline_columns.size
@@ -89,11 +89,11 @@ describe ProjectsController, type: :controller do
     let(:tracker_2) { Tracker.find(2) }
     let(:tracker_3) { Tracker.find(3) }
 
-    let(:tomorrow_date_formatted) { Date.tomorrow.to_s(:db) }
-    let(:two_days_ago_formatted) { 2.days.ago.to_s(:db) }
-    let(:twelve_years_ago_formatted) { 12.years.ago.to_s(:db) }
+    let(:tomorrow_date_formatted) { db_formatted_date(Date.tomorrow) }
+    let(:two_days_ago_formatted) { db_formatted_date(2.days.ago) }
+    let(:twelve_years_ago_formatted) { db_formatted_date(12.years.ago) }
 
-    it "Should only display public projects for anonymous users " do
+    it "displays only public projects for anonymous users " do
       columns = ["name", "last_issue_date_for_tracker_#{tracker_1.id}",
                  "last_issue_date_for_tracker_#{tracker_2.id}",
                  "last_issue_date_for_tracker_#{tracker_3.id}"]
@@ -132,7 +132,7 @@ describe ProjectsController, type: :controller do
       expect(lines[4].split(',')[3].split[0]).to eq format_date(two_days_ago_formatted)
     end
 
-    it "Should display only private projects when user has permission and is_public is false" do
+    it "displays only private projects when user has permission and is_public is false" do
       @request.session[:user_id] = 1 # permissions admin
       columns = ["name", "last_issue_date_for_tracker_#{tracker_1.id}",
                  "last_issue_date_for_tracker_#{tracker_2.id}",
@@ -165,15 +165,23 @@ describe ProjectsController, type: :controller do
       expect(lines[2].split(',')[3].split[0]).to eq format_date(tomorrow_date_formatted)
     end
 
+    def db_formatted_date(date)
+      if date.respond_to?(:to_fs)
+        date.to_fs(:db) # Redmine 6 and later
+      else
+        date.to_s(:db) # Redmine 5
+      end
+    end
+
     def create_issues_for_test
-      thirteen_months_ago_formatted = 13.months.ago.to_s(:db)
+      thirteen_months_ago_formatted = db_formatted_date(13.months.ago)
 
       create_issue_with(creation_date: two_days_ago_formatted,
                         params: { project_id: 1, :tracker => Tracker.first,
                                   :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue project_first tracker_first 1" })
 
-      create_issue_with(creation_date: 3.days.ago.to_s(:db),
+      create_issue_with(creation_date: db_formatted_date(3.days.ago),
                         params: { project_id: 1, :tracker => Tracker.first,
                                   :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue project_first tracker_first 2" })
@@ -203,7 +211,7 @@ describe ProjectsController, type: :controller do
                                   :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test6" })
 
-      create_issue_with(creation_date: 7.days.ago.to_s(:db),
+      create_issue_with(creation_date: db_formatted_date(7.days.ago),
                         params: { project_id: 1, :tracker => Tracker.first,
                                   :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test7" })
@@ -218,7 +226,7 @@ describe ProjectsController, type: :controller do
                                   :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test9" })
 
-      create_issue_with(creation_date: 2.weeks.ago.to_s(:db),
+      create_issue_with(creation_date: db_formatted_date(2.weeks.ago),
                         params: { :project => Project.fourth, :tracker => Tracker.second,
                                   :author => User.first, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test10" })

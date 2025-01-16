@@ -275,77 +275,87 @@ describe "ProjectQuery" do
       expect(projects.map(&:id)).to include(4) # project 4 has an issue created last month
     end
 
+    def db_formatted_date(date)
+      if date.respond_to?(:to_fs)
+        date.to_fs(:db) # Redmine 6 and later
+      else
+        date.to_s(:db) # Redmine 5
+      end
+    end
+
     def create_issues_for_test
-      past_date_this_week = random_date_this_week.to_s(:db)
-      future_date_tomorrow_or_later = get_tomorrow_date_or_later.to_s(:db)
+
+      past_date_this_week = db_formatted_date(random_date_this_week)
+      future_date_tomorrow_or_later = db_formatted_date(get_tomorrow_date_or_later)
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { project_id: 1, :tracker => Tracker.first,
+                        params: { project_id: 1,
+                                  tracker_id: 1,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test1" })
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { :project => Project.fourth, :tracker => Tracker.first,
+                        params: { project_id: 4, tracker_id: 1,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test2" })
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                        params: { project_id: 4, tracker_id: 2,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test3" })
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { :project => Project.fourth, :tracker => Tracker.third,
+                        params: { project_id: 4, tracker_id: 3,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test4" })
 
       create_issue_with(creation_date: "2012-06-16 20:00:00",
-                        params: { :project => last_project, :tracker => Tracker.first,
+                        params: { :project => last_project, tracker_id: 1,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test5" })
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { :project => Project.second, :tracker => Tracker.third,
+                        params: { project_id: 2, tracker_id: 3,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test6" })
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { project_id: 1, :tracker => Tracker.first,
+                        params: { project_id: 1, tracker_id: 1,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test7" })
 
-      create_issue_with(creation_date: 13.months.ago.to_s(:db),
-                        params: { project_id: 1, :tracker => Tracker.first,
+      create_issue_with(creation_date: db_formatted_date(13.months.ago),
+                        params: { project_id: 1, tracker_id: 1,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test8" })
 
-      create_issue_with(creation_date: 13.months.ago.to_s(:db),
-                        params: { :project => Project.second, :tracker => Tracker.third,
+      create_issue_with(creation_date: db_formatted_date(13.months.ago),
+                        params: { project_id: 2, tracker_id: 3,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test9" })
 
-      create_issue_with(creation_date: 2.weeks.ago.to_s(:db),
-                        params: { :project => Project.fourth, :tracker => Tracker.second,
+      create_issue_with(creation_date: db_formatted_date(2.weeks.ago),
+                        params: { project_id: 4, tracker_id: 2,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test10" })
 
       create_issue_with(creation_date: future_date_tomorrow_or_later,
-                        params: { :project => Project.second, :tracker => Tracker.third,
+                        params: { project_id: 2, tracker_id: 3,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test11" })
 
       create_issue_with(creation_date: future_date_tomorrow_or_later,
-                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                        params: { project_id: 4, tracker_id: 2,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test12" })
 
       create_issue_with(creation_date: past_date_this_week,
-                        params: { :project => Project.fourth, :tracker => Tracker.second,
+                        params: { project_id: 4, tracker_id: 2,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test13" })
 
-      create_issue_with(creation_date: Date.today.prev_month.to_s(:db),
-                        params: { :project => Project.fourth, :tracker => Tracker.second,
+      create_issue_with(creation_date: db_formatted_date(Date.today.prev_month),
+                        params: { project_id: 4, tracker_id: 2,
                                   author_id: 1, :status_id => IssueStatus.first, :priority => IssuePriority.first,
                                   :subject => "Issue test14" })
 

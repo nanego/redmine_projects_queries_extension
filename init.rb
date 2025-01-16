@@ -10,5 +10,5 @@ Redmine::Plugin.register :redmine_projects_queries_extension do
   requires_redmine :version_or_higher => '4.1.0'
   requires_redmine_plugin :redmine_base_deface, :version_or_higher => '0.0.1'
   requires_redmine_plugin :redmine_base_rspec, :version_or_higher => '0.0.4' if Rails.env.test?
-  version '4.1.0'
+  version '5.1.5'
 end

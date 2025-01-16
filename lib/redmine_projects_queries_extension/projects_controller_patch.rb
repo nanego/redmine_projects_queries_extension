@@ -19,7 +19,7 @@ module RedmineProjectsQueriesExtension
           user_names_map[u.id] = u.name
         end
         members_by_project_map = {}
-        @entries.each do |p|
+        project_scope.each do |p|
           members = p.send("members")
           members_by_project_map[p.id] = members.collect {|m| "#{user_names_map[m.user_id]}"}.compact.join(', ').html_safe
         end
@@ -99,7 +99,7 @@ module RedmineProjectsQueriesExtension
     def directions_map
       @directions_map ||= Rails.cache.fetch ['all-directions', Member.maximum("created_on").to_i, Organization.maximum("updated_at").to_i].join('/') do
         map = {}
-        @entries.each do |p|
+        project_scope.each do |p|
           orgas = p.send("organizations")
           directions = []
           orgas.each do |o|
