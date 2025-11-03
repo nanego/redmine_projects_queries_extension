@@ -11,3 +11,5 @@ en:
   please_select_less_columns: Please reduce the number of selected columns
   link_get_mail_addresses: Get mailing list
   field_last_issue_date_for_tracker: "Last issue %{value}"
+  field_role_emails: "Role emails - %{value}"
+  field_function_emails: "Function emails - %{value}"

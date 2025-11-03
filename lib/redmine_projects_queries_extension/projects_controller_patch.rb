@@ -115,6 +115,56 @@ module RedmineProjectsQueriesExtension
       end
     end
 
+    def role_emails_map
+      cache_strategy = ['all-role-emails', Member.maximum("created_on").to_i, EmailAddress.maximum("updated_on").to_i].join('/')
+      @role_emails_map ||= Rails.cache.fetch cache_strategy do
+        map = {}
+        sql = Member.select("project_id, role_id, email_addresses.address").
+          joins(:user).
+          joins("LEFT JOIN email_addresses ON users.id = email_addresses.user_id AND email_addresses.is_default = true").
+          joins(:member_roles).
+          where("users.status = ?", Principal::STATUS_ACTIVE).
+          order("project_id, role_id, email_addresses.address").
+          group("project_id, role_id, email_addresses.address").to_sql
+        array = ActiveRecord::Base.connection.execute(sql)
+        array.each do |record|
+          unless map[record["project_id"]]
+            map[record["project_id"]] = {}
+          end
+          unless map[record["project_id"]][record["role_id"]]
+            map[record["project_id"]][record["role_id"]] = []
+          end
+          map[record["project_id"]][record["role_id"]] << record["address"] if record["address"].present?
+        end
+        map
+      end
+    end
+
+    def function_emails_map
+      cache_strategy = ['all-function-emails', Member.maximum("created_on").to_i, EmailAddress.maximum("updated_on").to_i].join('/')
+      @function_emails_map ||= Rails.cache.fetch cache_strategy do
+        map = {}
+        sql = Member.select("project_id, function_id, email_addresses.address").
+          joins(:user).
+          joins("LEFT JOIN email_addresses ON users.id = email_addresses.user_id AND email_addresses.is_default = true").
+          joins(:member_functions).
+          where("users.status = ?", Principal::STATUS_ACTIVE).
+          order("project_id, function_id, email_addresses.address").
+          group("project_id, function_id, email_addresses.address").to_sql
+        array = ActiveRecord::Base.connection.execute(sql)
+        array.each do |record|
+          unless map[record["project_id"]]
+            map[record["project_id"]] = {}
+          end
+          unless map[record["project_id"]][record["function_id"]]
+            map[record["project_id"]][record["function_id"]] = []
+          end
+          map[record["project_id"]][record["function_id"]] << record["address"] if record["address"].present?
+        end
+        map
+      end
+    end
+
     def query_to_mail_addresses(projects, options = {})
       encoding = l(:general_csv_encoding)
 
@@ -176,6 +226,8 @@ class ProjectsController
   helper_method :organizations_map
   helper_method :directions_map
   helper_method :trackers_issues_map
+  helper_method :role_emails_map
+  helper_method :function_emails_map
 end
 
 class Project

@@ -27,9 +27,17 @@ module RedmineProjectsQueriesExtension
           if organizations_map[item.id] && organizations_map[item.id][$1.to_i]
             organizations_map[item.id][$1.to_i].uniq.join(', ').html_safe
           end
+        when /role_emails_(\d+)$/
+          if role_emails_map[item.id] && role_emails_map[item.id][$1.to_i]
+            role_emails_map[item.id][$1.to_i].uniq.join(', ').html_safe
+          end
         when /function_(\d+)$/
           if organizations_map[item.id] && organizations_map[item.id][column.name.to_s]
             organizations_map[item.id][column.name.to_s].uniq.join(', ').html_safe
+          end
+        when /function_emails_(\d+)$/
+          if function_emails_map[item.id] && function_emails_map[item.id][$1.to_i]
+            function_emails_map[item.id][$1.to_i].uniq.join(', ').html_safe
           end
         when /last_issue_date_for_tracker_(\d+)$/
           if trackers_issues_map[item.id] && trackers_issues_map[item.id][column.name.to_s]
@@ -67,9 +75,21 @@ module RedmineProjectsQueriesExtension
         else
           value = ""
         end
+      when /role_emails_(\d+)$/
+        if role_emails_map[project.id] && role_emails_map[project.id][$1.to_i]
+          value = role_emails_map[project.id][$1.to_i].join(', ')
+        else
+          value = ""
+        end
       when /function_(\d+)$/
         if organizations_map[project.id] && organizations_map[project.id][column.name.to_s]
           value = organizations_map[project.id][column.name.to_s].uniq.join(', ').html_safe
+        end
+      when /function_emails_(\d+)$/
+        if function_emails_map[project.id] && function_emails_map[project.id][$1.to_i]
+          value = function_emails_map[project.id][$1.to_i].join(', ')
+        else
+          value = ""
         end
       when /last_issue_date_for_tracker_(\d+)$/
         if trackers_issues_map[project.id] && trackers_issues_map[project.id][column.name.to_s]

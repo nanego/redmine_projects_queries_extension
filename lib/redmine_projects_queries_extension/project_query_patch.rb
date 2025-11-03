@@ -42,6 +42,24 @@ module RedmineProjectsQueriesExtension
       end
     end
 
+    class QueryRoleEmailColumn < QueryColumn
+      def initialize(role)
+        self.name = "role_emails_#{role.id}".to_sym
+        self.sortable = false
+        self.groupable = false
+        @inline = true
+        @role = role
+      end
+
+      def caption
+        l(:field_role_emails, :value => @role.name)
+      end
+
+      def role
+        @role
+      end
+    end
+
     class QueryFunctionColumn < QueryColumn
       def initialize(function)
         self.name = "function_#{function.id}".to_sym
@@ -53,6 +71,24 @@ module RedmineProjectsQueriesExtension
 
       def caption
         @function.name
+      end
+
+      def role
+        @function
+      end
+    end
+
+    class QueryFunctionEmailColumn < QueryColumn
+      def initialize(function)
+        self.name = "function_emails_#{function.id}".to_sym
+        self.sortable = false
+        self.groupable = false
+        @inline = true
+        @function = function
+      end
+
+      def caption
+        l(:field_function_emails, :value => @function.name)
       end
 
       def role
@@ -114,8 +150,10 @@ module RedmineProjectsQueriesExtension
         # now the plugin only knows how to display these columns if the
         # organizations plugin is present => we display organizations names in the column...
         @available_columns += Role.where("builtin = 0").order("position asc").all.collect { |role| QueryRoleColumn.new(role) }
+        @available_columns += Role.where("builtin = 0").order("position asc").all.collect { |role| QueryRoleEmailColumn.new(role) } if User.current.admin?
         if self.class.has_limited_visibility_plugin?
           @available_columns += Function.order("position asc").all.collect { |function| QueryFunctionColumn.new(function) }
+          @available_columns += Function.order("position asc").all.collect { |function| QueryFunctionEmailColumn.new(function) } if User.current.admin?
         end
       end
       # add a available_columns for each tracker

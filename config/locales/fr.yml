@@ -11,3 +11,5 @@ fr:
   please_select_less_columns: Veuillez réduire le nombre de colonnes sélectionnées
   link_get_mail_addresses: Liste des emails des membres
   field_last_issue_date_for_tracker: "Dernière demande %{value}"
+  field_role_emails: "Emails par rôle - %{value}"
+  field_function_emails: "Emails par fonction - %{value}"
