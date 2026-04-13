@@ -149,11 +149,13 @@ module RedmineProjectsQueriesExtension
         # role display is NOT strictly related to organizations plugin but for
         # now the plugin only knows how to display these columns if the
         # organizations plugin is present => we display organizations names in the column...
-        @available_columns += Role.where("builtin = 0").order("position asc").all.collect { |role| QueryRoleColumn.new(role) }
-        @available_columns += Role.where("builtin = 0").order("position asc").all.collect { |role| QueryRoleEmailColumn.new(role) } if User.current.admin?
+        roles = Role.where("builtin = 0").order("position asc").to_a
+        @available_columns += roles.collect { |role| QueryRoleColumn.new(role) }
+        @available_columns += roles.collect { |role| QueryRoleEmailColumn.new(role) } if User.current.admin?
         if self.class.has_limited_visibility_plugin?
-          @available_columns += Function.order("position asc").all.collect { |function| QueryFunctionColumn.new(function) }
-          @available_columns += Function.order("position asc").all.collect { |function| QueryFunctionEmailColumn.new(function) } if User.current.admin?
+          functions = Function.order("position asc").to_a
+          @available_columns += functions.collect { |function| QueryFunctionColumn.new(function) }
+          @available_columns += functions.collect { |function| QueryFunctionEmailColumn.new(function) } if User.current.admin?
         end
       end
       # add a available_columns for each tracker
