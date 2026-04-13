@@ -12,8 +12,24 @@ module RedmineProjectsQueriesExtension
       end
     end
 
+    def members_cache_key
+      @members_cache_key ||= Member.maximum("created_on").to_i
+    end
+
+    def organizations_cache_key
+      @organizations_cache_key ||= Organization.maximum("updated_at").to_i
+    end
+
+    def email_addresses_cache_key
+      @email_addresses_cache_key ||= EmailAddress.maximum("updated_on").to_i
+    end
+
+    def trackers_issues_cache_key
+      @trackers_issues_cache_key ||= [Project.maximum("created_on").to_i, Tracker.maximum("id").to_i, Issue.maximum("updated_on").to_i].join('/')
+    end
+
     def members_map
-      @members_map ||= Rails.cache.fetch("projects-members-#{Member.maximum("created_on").to_i}") do
+      @members_map ||= Rails.cache.fetch("projects-members-#{members_cache_key}") do
         user_names_map = {}
         @query.all_users.each do |u|
           user_names_map[u.id] = u.name
@@ -28,7 +44,7 @@ module RedmineProjectsQueriesExtension
     end
 
     def organizations_map
-      cache_strategy = ['all-organizations', Member.maximum("created_on").to_i, Organization.maximum("updated_at").to_i, 2].join('/')
+      cache_strategy = ['all-organizations', members_cache_key, organizations_cache_key, 2].join('/')
       @organizations_map ||= Rails.cache.fetch cache_strategy do
         orgas_fullnames = {}
         Organization.find_each do |o|
@@ -75,8 +91,7 @@ module RedmineProjectsQueriesExtension
     end
 
     def trackers_issues_map
-      cache_strategy = ['all-projects', Project.maximum("created_on").to_i, Tracker.maximum("id").to_i, Issue.maximum("updated_on").to_i].join('/')
-      @trackers_issues_map ||= Rails.cache.fetch cache_strategy do
+      @trackers_issues_map ||= Rails.cache.fetch("all-projects-#{trackers_issues_cache_key}") do
         sql = Issue.select("project_id, tracker_id, Max(created_on)").
           group("project_id, tracker_id").to_sql
         array = ActiveRecord::Base.connection.execute(sql)
@@ -97,7 +112,7 @@ module RedmineProjectsQueriesExtension
     end
 
     def directions_map
-      @directions_map ||= Rails.cache.fetch ['all-directions', Member.maximum("created_on").to_i, Organization.maximum("updated_at").to_i].join('/') do
+      @directions_map ||= Rails.cache.fetch(['all-directions', members_cache_key, organizations_cache_key].join('/')) do
         map = {}
         project_scope.each do |p|
           orgas = p.send("organizations")
@@ -116,8 +131,7 @@ module RedmineProjectsQueriesExtension
     end
 
     def role_emails_map
-      cache_strategy = ['all-role-emails', Member.maximum("created_on").to_i, EmailAddress.maximum("updated_on").to_i].join('/')
-      @role_emails_map ||= Rails.cache.fetch cache_strategy do
+      @role_emails_map ||= Rails.cache.fetch(['all-role-emails', members_cache_key, email_addresses_cache_key].join('/')) do
         map = {}
         sql = Member.select("project_id, role_id, email_addresses.address").
           joins(:user).
@@ -141,8 +155,7 @@ module RedmineProjectsQueriesExtension
     end
 
     def function_emails_map
-      cache_strategy = ['all-function-emails', Member.maximum("created_on").to_i, EmailAddress.maximum("updated_on").to_i].join('/')
-      @function_emails_map ||= Rails.cache.fetch cache_strategy do
+      @function_emails_map ||= Rails.cache.fetch(['all-function-emails', members_cache_key, email_addresses_cache_key].join('/')) do
         map = {}
         sql = Member.select("project_id, function_id, email_addresses.address").
           joins(:user).
