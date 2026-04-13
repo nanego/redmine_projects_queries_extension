@@ -81,12 +81,18 @@ describe ProjectsController, type: :controller do
   end
 
   describe "#directions_map" do
-    fixtures :organizations
-
     before do
-      # User 2 (jsmith, active) is member of project 1
-      # Team A (id: 2) belongs to Org A (id: 1, direction: true)
-      User.find(2).update_column(:organization_id, 2)
+      skip "redmine_organizations plugin not installed" unless Redmine::Plugin.installed?(:redmine_organizations)
+      @org_a = Organization.create!(name: "Direction Test Org A", direction: true)
+      @team_a = Organization.create!(name: "Direction Test Team A", parent_id: @org_a.id)
+      User.find(2).update_column(:organization_id, @team_a.id)
+    end
+
+    after do
+      if Redmine::Plugin.installed?(:redmine_organizations)
+        Organization.where(name: ["Direction Test Org A", "Direction Test Team A"]).delete_all
+        User.find(2).update_column(:organization_id, nil)
+      end
     end
 
     it "returns the direction name for each project" do
@@ -95,10 +101,9 @@ describe ProjectsController, type: :controller do
       expect(response).to be_successful
 
       map = controller.directions_map
-      # Project 1 has jsmith (user 2) in Team A → direction is Org A
-      expect(map[1]).to eq("Org A")
-      # Project 2 also has jsmith (user 2)
-      expect(map[2]).to eq("Org A")
+      # User 2 (jsmith) is member of project 1 and 2, in Team A whose direction is Org A
+      expect(map[1]).to eq("Direction Test Org A")
+      expect(map[2]).to eq("Direction Test Org A")
     end
   end
 
