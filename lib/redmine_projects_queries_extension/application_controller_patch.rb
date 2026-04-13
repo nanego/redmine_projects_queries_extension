@@ -10,7 +10,7 @@ module RedmineProjectsQueriesExtension
         if params[:per_page]
           params[:per_page].to_s.to_i
         else
-          1000 # New default limit for projects index page
+          2000 # New default limit for projects index page
         end
       else
 

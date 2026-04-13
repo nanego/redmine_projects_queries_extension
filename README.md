@@ -18,14 +18,14 @@ Requirements:
 Note that this plugin now depends on:
 * **redmine_base_deface** which can be found [here](https://github.com/jbbarth/redmine_base_deface)
 
-First download the source or clone the plugin and put it in the "plugins/" directory of your redmine instance. Note that this is crucial that the directory is named 'redmine_projects_queries_extension' !
+First, download the source or clone the plugin and put it in the "plugins/" directory of your redmine instance. Note that this is crucial that the directory is named 'redmine_projects_queries_extension' !
 
 Then execute:
 
     $ bundle install
     $ rake redmine:plugins
 
-And finally restart your Redmine instance.
+And finally, restart your Redmine instance.
 
 This plugin is only compatible with Redmine 4.1.0 and above.
 Please feel free to report any bug you encounter.
@@ -42,6 +42,49 @@ Please feel free to report any bug you encounter.
 [2]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/6_1_2.yml/badge.svg
 [3]: https://github.com/nanego/redmine_projects_queries_extension/actions/workflows/master.yml/badge.svg
 [5]: https://github.com/nanego/redmine_projects_queries_extension/actions
+
+## Columns added to the /projects page
+
+The plugin adds the following columns to the project list:
+
+### Static columns
+
+| Column | Label | Admin only |
+|--------|-------|------------|
+| `updated_on` | Updated on | No |
+| `activity` | Activity | No |
+| `issues` | Issues | No |
+| `role` | Role | No |
+| `members` | Members | No |
+| `users` | Users | No |
+| `description` | Description | No |
+| `organizations` | Organizations (requires `redmine_organizations` plugin) | No |
+
+### Dynamic columns per role
+
+One column is generated for each non-built-in role defined in Redmine. Requires the `redmine_organizations` plugin.
+
+| Column | Label | Admin only |
+|--------|-------|------------|
+| `role_{id}` | Role name | No |
+| `role_emails_{id}` | Role emails - {role name} | **Yes** |
+
+### Dynamic columns per function
+
+One column is generated for each function defined in Redmine. Requires both `redmine_organizations` and `redmine_limited_visibility` plugins.
+
+| Column | Label | Admin only |
+|--------|-------|------------|
+| `function_{id}` | Function name | No |
+| `function_emails_{id}` | Function emails - {function name} | **Yes** |
+
+### Dynamic columns per tracker
+
+One column is generated for each tracker defined in Redmine.
+
+| Column | Label | Admin only |
+|--------|-------|------------|
+| `last_issue_date_for_tracker_{id}` | Last issue {tracker name} | No |
 
 ## Contributing
 
