@@ -119,12 +119,14 @@ module RedmineProjectsQueriesExtension
     def initialize_available_filters
       super
 
-      member_values = []
-      member_values << ["<< #{l(:label_me)} >>", "me"] if User.current.logged?
-      member_values += all_users.collect { |s| [s.name, s.id.to_s] }
       add_available_filter("member_id",
-                           :type => :list, :values => member_values
-      ) unless member_values.empty?
+                           :type => :list, :values => lambda {
+                             values = []
+                             values << ["<< #{l(:label_me)} >>", "me"] if User.current.logged?
+                             values += all_users.collect { |s| [s.name, s.id.to_s] }
+                             values
+                           }
+      )
 
       add_available_filter "updated_on", :type => :date_past
 
