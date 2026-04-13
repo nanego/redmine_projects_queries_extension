@@ -80,6 +80,44 @@ describe ProjectsController, type: :controller do
     expect(query.column_names.map(&:to_s)).to eq columns
   end
 
+  describe "#directions_map" do
+    fixtures :organizations
+
+    before do
+      # User 2 (jsmith, active) is member of project 1
+      # Team A (id: 2) belongs to Org A (id: 1, direction: true)
+      User.find(2).update_column(:organization_id, 2)
+    end
+
+    it "returns the direction name for each project" do
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['organizations'] }
+      expect(response).to be_successful
+
+      map = controller.directions_map
+      # Project 1 has jsmith (user 2) in Team A → direction is Org A
+      expect(map[1]).to eq("Org A")
+      # Project 2 also has jsmith (user 2)
+      expect(map[2]).to eq("Org A")
+    end
+  end
+
+  describe "#members_map" do
+    it "returns member names grouped by project, excluding locked users" do
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['members'] }
+      expect(response).to be_successful
+
+      map = controller.members_map
+      # Project 1 has jsmith (user 2) and dlopper (user 3), plus a locked user (member 4)
+      expect(map[1]).to include("John Smith")
+      expect(map[1]).to include("Dave Lopper")
+      # Project 2 has jsmith (user 2) only
+      expect(map[2]).to include("John Smith")
+      expect(map[2]).not_to include("Dave Lopper")
+    end
+  end
+
   describe "content columns in csv" do
     before do
       create_issues_for_test

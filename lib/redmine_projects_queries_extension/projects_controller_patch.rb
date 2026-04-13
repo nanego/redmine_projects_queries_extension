@@ -30,16 +30,18 @@ module RedmineProjectsQueriesExtension
 
     def members_map
       @members_map ||= Rails.cache.fetch("projects-members-#{members_cache_key}") do
-        user_names_map = {}
-        @query.all_users.each do |u|
-          user_names_map[u.id] = u.name
+        user_names_map = @query.all_users.each_with_object({}) { |u, h| h[u.id] = u.name }
+
+        map = Hash.new { |h, k| h[k] = [] }
+        Member.joins(:user)
+              .where(users: { status: Principal::STATUS_ACTIVE })
+              .pluck("#{Member.table_name}.project_id", "#{Member.table_name}.user_id")
+              .each do |project_id, user_id|
+          name = user_names_map[user_id]
+          map[project_id] << name if name.present?
         end
-        members_by_project_map = {}
-        project_scope.each do |p|
-          members = p.send("members")
-          members_by_project_map[p.id] = members.collect {|m| "#{user_names_map[m.user_id]}"}.compact.join(', ').html_safe
-        end
-        members_by_project_map
+
+        map.transform_values { |names| names.join(', ').html_safe }
       end
     end
 
@@ -113,20 +115,33 @@ module RedmineProjectsQueriesExtension
 
     def directions_map
       @directions_map ||= Rails.cache.fetch(['all-directions', members_cache_key, organizations_cache_key].join('/')) do
-        map = {}
-        project_scope.each do |p|
-          orgas = p.send("organizations")
-          directions = []
-          orgas.each do |o|
-            directions << o.direction_organization.name
+        # Load all organizations once and index by id
+        all_orgs = Organization.all.index_by(&:id)
+
+        # Compute direction_organization in memory to avoid N+1 parent traversal
+        direction_cache = {}
+        find_direction = lambda do |org|
+          direction_cache[org.id] ||= if org.direction? || org.parent_id.nil?
+            org
+          else
+            find_direction.call(all_orgs[org.parent_id])
           end
-          directions.uniq!
-          if (directions.size > 1)
-            directions = directions - ["CPII"]
-          end
-          map[p.id] = directions.join(', ').html_safe
         end
-        map
+
+        # Load all project-organization links in one query instead of one per project
+        raw_map = Hash.new { |h, k| h[k] = [] }
+        Organization.joins(:users => :members)
+                    .where("users.status = ?", Principal::STATUS_ACTIVE)
+                    .pluck("members.project_id", "organizations.id")
+                    .each do |project_id, org_id|
+          org = all_orgs[org_id]
+          next unless org
+          raw_map[project_id] << find_direction.call(org).name
+        end
+
+        raw_map.each_with_object({}) do |(project_id, directions), map|
+          map[project_id] = directions.uniq.join(', ').html_safe
+        end
       end
     end
 
