@@ -50,8 +50,8 @@ describe ProjectSummary do
     it "builds statistics based upon activity_records" do
       allow(summary).to receive(:project_ids) { [1] }
       allow(summary).to receive(:activity_records) {
-        [double(:project_id => 1, :created_on => Date.today),
-         double(:project_id => 1, :created_on => Date.today)]
+        [[Date.today, 1],
+         [Date.today, 1]]
       }
       expect(summary.activity_statistics[1].last).to eq 2
     end
