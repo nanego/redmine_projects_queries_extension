@@ -38,12 +38,14 @@ class ProjectSummary
 
   def activity_records
     return @records if @records
-    @records = Issue.select("created_on, project_id").where("created_on > ? and project_id in (?)",
-                                                            activity_period_begin, project_ids)
-    @records += Journal.select("#{Journal.table_name}.created_on, project_id").joins(:issue)
-                       .where("notes is not null and #{Journal.table_name}.created_on > ? and project_id in (?)",
-                              activity_period_begin, project_ids)
-    @records
+    issue_rows = Issue.where("created_on > ? and project_id in (?)", activity_period_begin, project_ids)
+                      .pluck(:created_on, :project_id)
+                      .map { |created_on, project_id| [created_on, project_id] }
+    journal_rows = Journal.joins(:issue)
+                          .where("notes is not null and #{Journal.table_name}.created_on > ? and project_id in (?)",
+                                 activity_period_begin, project_ids)
+                          .pluck("#{Journal.table_name}.created_on", "#{Issue.table_name}.project_id")
+    @records = issue_rows + journal_rows
   end
 
   def activity_statistics
@@ -52,11 +54,10 @@ class ProjectSummary
       memo[project_id] = [0] * (activity_period / 7).ceil
       memo
     end
-    activity_records.each do |record|
-      id = record.project_id
-      n = ((record.created_on.to_date - activity_period_begin) / 7).to_i
-      @stats[id][n] = 0 if @stats[id] && @stats[id][n].nil?
-      @stats[id][n] += 1 if @stats[id]
+    activity_records.each do |created_on, project_id|
+      n = ((created_on.to_date - activity_period_begin) / 7).to_i
+      @stats[project_id][n] = 0 if @stats[project_id] && @stats[project_id][n].nil?
+      @stats[project_id][n] += 1 if @stats[project_id]
     end
     @stats
   end

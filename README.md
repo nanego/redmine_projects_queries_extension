@@ -86,6 +86,18 @@ One column is generated for each tracker defined in Redmine.
 |--------|-------|------------|
 | `last_issue_date_for_tracker_{id}` | Last issue {tracker name} | No |
 
+## Filters added to the /projects page
+
+The plugin adds the following filters to the project list:
+
+| Filter | Type | Notes |
+|--------|------|-------|
+| `member_id` | List | Filter by member; includes a "me" option for logged-in users |
+| `updated_on` | Date (past) | Filter by project last update date |
+| `last_issue_date_for_tracker_{id}` | Date | One filter per tracker — date of the last issue created for that tracker |
+| `organizations` | List | Filter by direction (top-level organization). Requires `redmine_organizations` plugin |
+| `organization` | List | Filter by any organization. Requires `redmine_organizations` plugin |
+
 ## Contributing
 
 1. Fork it

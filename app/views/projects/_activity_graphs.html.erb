@@ -1,3 +1,5 @@
+<% active_column_names = @query.columns.map(&:name) %>
+<% if (active_column_names & [:activity, :issues, :users]).any? %>
 <% displayed_ids = entries.map(&:id) %>
 <% cache ["project-statistics", displayed_ids.sort, Time.now.midnight.to_i] do %>
   <script type=text/javascript>
@@ -27,4 +29,5 @@
               height:20, width: (27*(5+1)-1) })
       })
   </script>
+<% end %>
 <% end %>
