@@ -93,6 +93,7 @@ jobs:
           sed -i '/rubocop/d' Gemfile
           rm -f .rubocop*
           cp plugins/redmine_base_rspec/spec/support/database-${{ matrix.db }}.yml config/database.yml
+          echo "gem 'rake', '< 13.4'" >> Gemfile # rake 13.4.0 has a broken packaging (missing rake/options)
 
       - name: Install Ruby dependencies
         working-directory: redmine
