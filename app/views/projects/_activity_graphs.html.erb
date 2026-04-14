@@ -1,6 +1,7 @@
-<% cache ["project-statistics", Project.maximum(:created_on).to_i, Time.now.midnight.to_i].join("/") do %>
+<% displayed_ids = entries.map(&:id) %>
+<% cache ["project-statistics", displayed_ids.sort, Time.now.midnight.to_i] do %>
   <script type=text/javascript>
-      <% summary = ProjectSummary.new(Project.pluck(:id)) %>
+      <% summary = ProjectSummary.new(displayed_ids) %>
       cache = {
           <%= entries.map do |project|
             "#{project.id}:{
