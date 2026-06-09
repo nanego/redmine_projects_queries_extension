@@ -130,7 +130,7 @@ module RedmineProjectsQueriesExtension
       )
 
       add_available_filter("non_member_role",
-                           :type => :list,
+                           :type => :list_optional,
                            :name => l(:field_non_member_roles),
                            :values => lambda { Role.givable.sorted.pluck(:name, :id).map { |name, id| [name, id.to_s] } })
 
@@ -214,17 +214,20 @@ module RedmineProjectsQueriesExtension
     end
 
     def sql_for_non_member_role_field(field, operator, value)
+      negative  = ["!", "!*"].include?(operator)
       group_ids = GroupNonMember.pluck(:id)
-      return "1=#{operator == '=' ? '0' : '1'}" if group_ids.empty?
+      return negative ? "1=1" : "1=0" if group_ids.empty?
 
       member_table  = Member.table_name
       mr_table      = MemberRole.table_name
       project_table = Project.table_name
+      # "*" (all) / "!*" (none): any non-member role; "=" / "!": the selected roles
+      role_condition = ["*", "!*"].include?(operator) ? "1=1" : sql_for_field(field, '=', value, 'mr', 'role_id')
       subquery =
         "SELECT m.project_id FROM #{member_table} m " \
         "INNER JOIN #{mr_table} mr ON mr.member_id = m.id " \
-        "WHERE m.user_id IN (#{group_ids.join(',')}) AND #{sql_for_field(field, '=', value, 'mr', 'role_id')}"
-      "#{project_table}.id #{operator == '=' ? 'IN' : 'NOT IN'} (#{subquery})"
+        "WHERE m.user_id IN (#{group_ids.join(',')}) AND #{role_condition}"
+      "#{project_table}.id #{negative ? 'NOT IN' : 'IN'} (#{subquery})"
     end
 
     def sql_for_field(field, operator, value, db_table, db_field, is_custom_filter = false)

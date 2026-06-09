@@ -123,6 +123,46 @@ describe ProjectsController, type: :controller do
     end
   end
 
+  describe "#non_member_roles_map" do
+    let(:non_member) { Group.non_member }
+
+    before do
+      # Non-members get Manager (role 1) + Developer (role 2) on project 1, Developer only on project 4
+      Member.create!(:project => Project.find(1), :principal => non_member, :role_ids => [1, 2])
+      Member.create!(:project => Project.find(4), :principal => non_member, :role_ids => [2])
+    end
+
+    it "returns non-member role names grouped by project, sorted by role position" do
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['non_member_roles'] }
+      expect(response).to be_successful
+
+      map = controller.non_member_roles_map
+      expect(map[1]).to eq("Manager, Developer")
+      expect(map[4]).to eq("Developer")
+    end
+
+    it "does not include projects without non-member roles" do
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['non_member_roles'] }
+      expect(response).to be_successful
+
+      map = controller.non_member_roles_map
+      expect(map[2]).to be_nil
+    end
+
+    it "renders the non-member role names in the csv export" do
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['name', 'non_member_roles'], format: 'csv' }
+      expect(response).to be_successful
+      expect(response.content_type).to eq 'text/csv; header=present'
+
+      lines = response.body.chomp.split("\n")
+      expect(lines[0]).to include("Non-member roles")
+      expect(response.body).to include("Manager, Developer")
+    end
+  end
+
   describe "content columns in csv" do
     before do
       create_issues_for_test

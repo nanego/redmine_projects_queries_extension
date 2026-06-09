@@ -94,6 +94,70 @@ describe "ProjectQuery" do
     assert !result.empty?
   end
 
+  describe "non-member roles filter and column availability" do
+    it "exposes the non_member_role filter" do
+      filter = ProjectQuery.new(:name => '_').available_filters["non_member_role"]
+      refute_nil filter
+      expect(filter[:type]).to eq :list_optional
+      expect(Query.operators_by_filter_type[filter[:type]]).to include("=", "!", "*", "!*")
+    end
+
+    it "exposes the non_member_roles column with its caption" do
+      column = ProjectQuery.new(:name => '_').available_columns.detect { |c| c.name == :non_member_roles }
+      refute_nil column
+      expect(column.caption).to eq "Non-member roles"
+    end
+  end
+
+  describe "Should filter non-member roles" do
+    let(:non_member) { Group.non_member }
+
+    before do
+      # Non-members get Manager (role 1) on public project 1, Developer (role 2) on public project 4
+      Member.create!(:project => Project.find(1), :principal => non_member, :role_ids => [1])
+      Member.create!(:project => Project.find(4), :principal => non_member, :role_ids => [2])
+    end
+
+    it "includes projects granting the selected role to non-members (operator =)" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'non_member_role' => { :operator => '=', :values => ['1'] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).to include(1)
+      expect(ids).not_to include(4)
+    end
+
+    it "excludes projects granting the selected role to non-members (operator !)" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'non_member_role' => { :operator => '!', :values => ['1'] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).not_to include(1)
+      expect(ids).to include(4)
+    end
+
+    it "returns no project when no non-member group has the selected role" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'non_member_role' => { :operator => '=', :values => ['3'] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).not_to include(1, 4)
+    end
+
+    it "includes projects granting any role to non-members (operator * all)" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'non_member_role' => { :operator => '*', :values => [''] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).to include(1, 4)
+      expect(ids).not_to include(2)
+    end
+
+    it "excludes projects granting any role to non-members (operator !* none)" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'non_member_role' => { :operator => '!*', :values => [''] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).not_to include(1, 4)
+      expect(ids).to include(2)
+    end
+  end
+
   describe "Should filter last issue of tracker" do
     before do
       create_issues_for_test
