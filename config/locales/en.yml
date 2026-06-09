@@ -13,3 +13,4 @@ en:
   field_last_issue_date_for_tracker: "Last issue %{value}"
   field_role_emails: "Role emails - %{value}"
   field_function_emails: "Function emails - %{value}"
+  field_non_member_roles: "Non-member roles"

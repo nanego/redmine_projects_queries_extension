@@ -92,6 +92,22 @@ module RedmineProjectsQueriesExtension
       end
     end
 
+    def non_member_roles_map
+      @non_member_roles_map ||= Rails.cache.fetch(['all-non-member-roles', members_cache_key].join('/')) do
+        group_ids = GroupNonMember.pluck(:id)
+        map = Hash.new { |h, k| h[k] = {} }
+        if group_ids.any?
+          Member.where(user_id: group_ids)
+                .joins(:member_roles => :role)
+                .pluck("#{Member.table_name}.project_id", "roles.id", "roles.name", "roles.position")
+                .each do |project_id, role_id, role_name, position|
+            map[project_id][role_id] = [position, role_name]
+          end
+        end
+        map.transform_values { |roles| roles.values.sort.map(&:last).join(', ').html_safe }
+      end
+    end
+
     def trackers_issues_map
       @trackers_issues_map ||= Rails.cache.fetch("all-projects-#{trackers_issues_cache_key}") do
         sql = Issue.select("project_id, tracker_id, Max(created_on)").
@@ -256,6 +272,7 @@ class ProjectsController
   helper_method :trackers_issues_map
   helper_method :role_emails_map
   helper_method :function_emails_map
+  helper_method :non_member_roles_map
 end
 
 class Project

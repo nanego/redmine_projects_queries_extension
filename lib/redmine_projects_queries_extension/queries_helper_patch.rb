@@ -45,6 +45,8 @@ module RedmineProjectsQueriesExtension
           end
         when :organizations
           directions_map[item.id]
+        when :non_member_roles
+          non_member_roles_map[item.id]
         else
           super
         end
@@ -59,6 +61,8 @@ module RedmineProjectsQueriesExtension
         value = ""
       when :organizations
         value = directions_map[project.id]
+      when :non_member_roles
+        value = non_member_roles_map[project.id]
       when :role
         if @memberships[project.id].present?
           value = @memberships[project.id].map(&:name).join(", ")
