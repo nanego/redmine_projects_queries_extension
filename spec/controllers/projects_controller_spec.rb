@@ -163,6 +163,21 @@ describe ProjectsController, type: :controller do
     end
   end
 
+  describe "inherit members column" do
+    it "renders Yes/No for the inherit_members column in the csv export" do
+      Project.find(1).update_column(:inherit_members, true)
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['name', 'inherit_members'], format: 'csv' }
+      expect(response).to be_successful
+      expect(response.content_type).to eq 'text/csv; header=present'
+
+      lines = response.body.chomp.split("\n")
+      expect(lines[0]).to include("Inherit members")
+      expect(response.body).to match(/^eCookbook,Yes$/m)
+      expect(response.body).to match(/^OnlineStore,No$/m)
+    end
+  end
+
   describe "content columns in csv" do
     before do
       create_issues_for_test

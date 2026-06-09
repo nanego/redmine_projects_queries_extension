@@ -59,6 +59,8 @@ The plugin adds the following columns to the project list:
 | `users` | Users | No |
 | `description` | Description | No |
 | `organizations` | Organizations (requires `redmine_organizations` plugin) | No |
+| `non_member_roles` | Non-member roles — roles granted to non-members through the builtin "Non members" group | No |
+| `inherit_members` | Inherit members — whether the project inherits members from its parent | No |
 
 ### Dynamic columns per role
 
@@ -93,6 +95,8 @@ The plugin adds the following filters to the project list:
 | Filter | Type | Notes |
 |--------|------|-------|
 | `member_id` | List | Filter by member; includes a "me" option for logged-in users |
+| `non_member_role` | List (optional) | Filter by role granted to non-members through the builtin "Non members" group; supports the "none" and "all" operators |
+| `inherit_members` | List | Filter projects that inherit (or not) their members from the parent project |
 | `updated_on` | Date (past) | Filter by project last update date |
 | `last_issue_date_for_tracker_{id}` | Date | One filter per tracker — date of the last issue created for that tracker |
 | `organizations` | List | Filter by direction (top-level organization). Requires `redmine_organizations` plugin |

@@ -20,6 +20,7 @@ class ProjectQuery < Query
   self.available_columns << QueryColumn.new(:description) unless self.available_columns.select { |c| c.name == :description }.present?
   self.available_columns << QueryColumn.new(:organizations, :sortable => false, :default_order => 'asc') if self.has_organizations_plugin? && !self.available_columns.select { |c| c.name == :organizations }.present?
   self.available_columns << QueryColumn.new(:non_member_roles, :sortable => false) if self.available_columns.none? { |c| c.name == :non_member_roles }
+  self.available_columns << QueryColumn.new(:inherit_members, :sortable => "#{Project.table_name}.inherit_members", :groupable => true) if self.available_columns.none? { |c| c.name == :inherit_members }
 end
 
 module RedmineProjectsQueriesExtension
@@ -133,6 +134,10 @@ module RedmineProjectsQueriesExtension
                            :type => :list_optional,
                            :name => l(:field_non_member_roles),
                            :values => lambda { Role.givable.sorted.pluck(:name, :id).map { |name, id| [name, id.to_s] } })
+
+      add_available_filter("inherit_members",
+                           :type => :list,
+                           :values => [[l(:general_text_yes), "1"], [l(:general_text_no), "0"]])
 
       add_available_filter "updated_on", :type => :date_past
 

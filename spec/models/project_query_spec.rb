@@ -158,6 +158,44 @@ describe "ProjectQuery" do
     end
   end
 
+  describe "inherit members filter and column availability" do
+    it "exposes the inherit_members filter with yes/no values" do
+      filter = ProjectQuery.new(:name => '_').available_filters["inherit_members"]
+      refute_nil filter
+      expect(filter[:type]).to eq :list
+      expect(filter[:values].map(&:last)).to match_array(["1", "0"])
+    end
+
+    it "exposes the inherit_members column with its caption" do
+      column = ProjectQuery.new(:name => '_').available_columns.detect { |c| c.name == :inherit_members }
+      refute_nil column
+      expect(column.caption).to eq "Inherit members"
+      expect(column.groupable?).to be true
+    end
+  end
+
+  describe "Should filter inherit members" do
+    before do
+      Project.find(3).update_column(:inherit_members, true)
+    end
+
+    it "includes only projects inheriting members (operator = yes)" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'inherit_members' => { :operator => '=', :values => ['1'] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).to include(3)
+      expect(ids).not_to include(1, 2)
+    end
+
+    it "excludes projects inheriting members (operator = no)" do
+      query = ProjectQuery.new(:name => '_',
+                               :filters => { 'inherit_members' => { :operator => '=', :values => ['0'] } })
+      ids = find_projects_with_query(query).map(&:id)
+      expect(ids).not_to include(3)
+      expect(ids).to include(1, 2)
+    end
+  end
+
   describe "Should filter last issue of tracker" do
     before do
       create_issues_for_test
