@@ -11,8 +11,14 @@ class ProjectQuery < Query
     Redmine::Plugin.installed?(:redmine_limited_visibility)
   end
 
+  def self.journals_table_available?
+    ActiveRecord::Base.connection.table_exists?('journals')
+  rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
+    false
+  end
+
   self.available_columns << QueryColumn.new(:updated_on, :sortable => "#{Project.table_name}.updated_on", :default_order => 'desc') unless self.available_columns.select { |c| c.name == :updated_on }.present?
-  self.available_columns << QueryColumn.new(:activity, :groupable => false, :sortable => ProjectSummary.sql_activity_records) unless self.available_columns.select { |c| c.name == :activity }.present? || !ActiveRecord::Base.connection.table_exists?('journals')
+  self.available_columns << QueryColumn.new(:activity, :groupable => false, :sortable => ProjectSummary.sql_activity_records) unless self.available_columns.select { |c| c.name == :activity }.present? || !journals_table_available?
   self.available_columns << QueryColumn.new(:issues, :sortable => false) unless self.available_columns.select { |c| c.name == :issues }.present?
   self.available_columns << QueryColumn.new(:role, :sortable => false) unless self.available_columns.select { |c| c.name == :role }.present?
   self.available_columns << QueryColumn.new(:members, :sortable => false) unless self.available_columns.select { |c| c.name == :members }.present?
@@ -199,10 +205,9 @@ module RedmineProjectsQueriesExtension
     end
 
     def all_users
-      timestamp = Member.maximum(:created_on)
-      Rails.cache.fetch ['all-users', timestamp.to_i].join('/') do
-        User.active.sorted.joins(:members).where("#{Member.table_name}.project_id IN (SELECT id FROM #{Project.table_name})").uniq
-      end
+      @all_users ||= User.active.sorted
+                         .where(id: Member.where("#{Member.table_name}.project_id IN (SELECT id FROM #{Project.table_name})").select(:user_id))
+                         .to_a
     end
 
     def sql_for_member_id_field(field, operator, value)

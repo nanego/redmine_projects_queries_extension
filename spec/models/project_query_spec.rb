@@ -94,6 +94,35 @@ describe "ProjectQuery" do
     assert !result.empty?
   end
 
+  describe "#all_users" do
+    it "returns each active member once, sorted" do
+      users = ProjectQuery.new(:name => '_').all_users
+      expected = User.active.sorted.select { |u| Member.where(user_id: u.id).exists? }
+
+      expect(users.map(&:id)).to eq expected.map(&:id)
+      expect(users.map(&:id)).to include(2, 3)
+      expect(users.map(&:id).uniq.size).to eq users.size
+    end
+
+    it "excludes locked users and users without membership" do
+      locked = User.find(2)
+      locked.update_column(:status, Principal::STATUS_LOCKED)
+      ids = ProjectQuery.new(:name => '_').all_users.map(&:id)
+
+      expect(ids).not_to include(2)
+      expect(ids).not_to include(User.active.where.not(id: Member.select(:user_id)).first.id)
+    end
+
+    it "does not query the database twice for the same query" do
+      query = ProjectQuery.new(:name => '_')
+      query.all_users
+      queries = 0
+      counter = ->(*, payload) { queries += 1 unless payload[:name] == 'SCHEMA' }
+      ActiveSupport::Notifications.subscribed(counter, 'sql.active_record') { query.all_users }
+      expect(queries).to eq 0
+    end
+  end
+
   describe "non-member roles filter and column availability" do
     it "exposes the non_member_role filter" do
       filter = ProjectQuery.new(:name => '_').available_filters["non_member_role"]
