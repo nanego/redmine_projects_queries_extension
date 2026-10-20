@@ -142,6 +142,16 @@ describe ProjectsController, type: :controller do
       expect(map[4]).to eq("Developer")
     end
 
+    it "escapes the non-member role names in the html list" do
+      Role.find(2).update_column(:name, '<img src=x onerror=alert(1)>')
+      @request.session[:user_id] = 1 # admin
+      get :index, params: { set_filter: 1, c: ['name', 'non_member_roles'], display_type: 'list' }
+      expect(response).to be_successful
+
+      expect(response.body).to include('&lt;img src=x onerror=alert(1)&gt;')
+      expect(response.body).not_to include('<img src=x onerror')
+    end
+
     it "does not include projects without non-member roles" do
       @request.session[:user_id] = 1 # admin
       get :index, params: { set_filter: 1, c: ['non_member_roles'] }

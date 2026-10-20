@@ -41,7 +41,7 @@ module RedmineProjectsQueriesExtension
           map[project_id] << name if name.present?
         end
 
-        map.transform_values { |names| names.join(', ').html_safe }
+        map.transform_values { |names| names.join(', ') }
       end
     end
 
@@ -104,7 +104,7 @@ module RedmineProjectsQueriesExtension
             map[project_id][role_id] = [position, role_name]
           end
         end
-        map.transform_values { |roles| roles.values.sort.map(&:last).join(', ').html_safe }
+        map.transform_values { |roles| roles.values.sort.map(&:last).join(', ') }
       end
     end
 
@@ -156,7 +156,7 @@ module RedmineProjectsQueriesExtension
         end
 
         raw_map.each_with_object({}) do |(project_id, directions), map|
-          map[project_id] = directions.uniq.join(', ').html_safe
+          map[project_id] = directions.uniq.join(', ')
         end
       end
     end
